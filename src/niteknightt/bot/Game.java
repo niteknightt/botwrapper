@@ -13,11 +13,11 @@ public class Game implements Runnable {
     protected Enums.GameState _gameState;
     protected LichessChallenge _challenge;
     protected Enums.Color _engineColor;
-    protected Enums.Color _humanColor;
+    protected Enums.Color _challengerColor;
     protected Board _board;
     protected StockfishClient _stockfishClient = new StockfishClient();
     protected List<Move> _moves = new ArrayList<Move>();
-    protected int _numMovesPlayedByHuman;
+    protected int _numMovesPlayedByChallenger;
     protected int _numMovesPlayedByEngine;
     protected Date _askedForAlgorithmTime = new Date();
     protected Random _random = new Random();
@@ -25,11 +25,12 @@ public class Game implements Runnable {
     protected List<OpponentProperties> _opponentProerties;
     protected Date _lastGameStateUpdate;
     protected EngineMoveSelector _moveSelector;
+    protected boolean _isChallengerHuman;
+    protected boolean _isChallengerBot;
 
     public Game(String gameId, LichessChallenge challenge) {
         _gameId = gameId;
         _challenge = challenge;
-
         initGame();
     }
 
@@ -39,6 +40,14 @@ public class Game implements Runnable {
     protected void initGame() {
         setGameState(Enums.GameState.CREATED);
 
+        if (_challenge.challenger.title != null && _challenge.challenger.title.equals("BOT")) {
+            _isChallengerHuman = false;
+        }
+        else {
+            _isChallengerHuman = true;
+        }
+        _isChallengerBot = !_isChallengerHuman;
+
         _stockfishClient.init(5000l);
         _stockfishClient.startGame();
 
@@ -46,7 +55,7 @@ public class Game implements Runnable {
         _board.setupStartingPosition();
 
         _numMovesPlayedByEngine = 0;
-        _numMovesPlayedByHuman = 0;
+        _numMovesPlayedByChallenger = 0;
     }
 
     /**
@@ -54,21 +63,22 @@ public class Game implements Runnable {
      * This should happen once per game after starting up the bot.
      */
     protected void _handleReceivingFullGameState(String whitePlayerId, String blackPlayerId) {
-        setAlgorithmFromHumanProps();
+        setAlgorithmFromChallengerProps();
+        writeWelcomeForBots();
 
         if (blackPlayerId.equals("niteknighttbot")) {
             _engineColor = Enums.Color.BLACK;
-            _humanColor = Enums.Color.WHITE;
+            _challengerColor = Enums.Color.WHITE;
         }
         else {
             _engineColor = Enums.Color.WHITE;
-            _humanColor = Enums.Color.BLACK;
+            _challengerColor = Enums.Color.BLACK;
         }
         setGameState(Enums.GameState.FULL_STATE_RECEIVED);
     }
 
     /**
-     * Handle receiving a human's move, and verify that our internal state of the game
+     * Handle receiving a challenger's move, and verify that our internal state of the game
      * matches Lichess's state.
      * 
      * @param status the status of the game according to Lichess.
@@ -105,11 +115,11 @@ public class Game implements Runnable {
             setGameState(Enums.GameState.ERROR);
         }
 
-        // Make the human's move that is in the game state, if there is one.
-        if (_board.whosTurnToGo() == _humanColor && stateMoves.size() == _moves.size() + 1) {
+        // Make the challenger's move that is in the game state, if there is one.
+        if (_board.whosTurnToGo() == _challengerColor && stateMoves.size() == _moves.size() + 1) {
             Move currentMove = stateMoves.get(stateMoves.size() - 1);
             if (!_board._isMoveLegal(currentMove)) {
-                Logger.error("Human move is not legal: " + currentMove);
+                Logger.error("Challenger move is not legal: " + currentMove);
                 setGameState(Enums.GameState.ERROR);
             }
             else {
@@ -118,18 +128,18 @@ public class Game implements Runnable {
                     setGameState(Enums.GameState.ERROR);
                 }
                 _moves.add(currentMove);
-                ++_numMovesPlayedByHuman;
+                ++_numMovesPlayedByChallenger;
             }
         }
     }
 
     /**
-     * Handles text received from the human in the chat.
+     * Handles text received from the challenger in the chat.
      * 
-     * @param text the text that the human wrote in the chat.
+     * @param text the text that the challenger wrote in the chat.
      */
-    protected void _handleChatFromHuman(String text) {
-        if (text.startsWith("algo") && (_challenge.challenger.title == null || !_challenge.challenger.title.equals("BOT"))) {
+    protected void _handleChatFromChallenger(String text) {
+        if (text.startsWith("algo") && _isChallengerHuman) {
             // Only do this part if the chat line starts with "algo"
             // and if the challenger is an actual human, not a bot.
             String remainingText = text.substring("algo".length());
@@ -141,7 +151,7 @@ public class Game implements Runnable {
                     return;
                 }
                 Enums.EngineAlgorithm requestedAlgorithm = Enums.EngineAlgorithm.fromValue(algoCode);
-                OpponentProperties.createOrUpdateAlgorithmForHuman(_challenge.challenger.id, requestedAlgorithm);
+                OpponentProperties.createOrUpdateAlgorithmForOpponent(_challenge.challenger.id, requestedAlgorithm);
                 Enums.EngineAlgorithm prevAlgoritm = _algorithm;
                 if (requestedAlgorithm == Enums.EngineAlgorithm.NONE) {
                     _setAlgorithm(DEFAULT_ALGORITHM_FOR_HUMAN);
@@ -172,14 +182,16 @@ public class Game implements Runnable {
      * and set the algorithm in the properties to NONE while using the
      * default algorithm for the engine.
      */
-    protected void setAlgorithmFromHumanProps() {
-        OpponentProperties props = OpponentProperties.getForHuman(_challenge.challenger.id);
+    protected void setAlgorithmFromChallengerProps() {
+        OpponentProperties props = OpponentProperties.getForOpponent(_challenge.challenger.id);
         if (props != null && props.algorithm != Enums.EngineAlgorithm.NONE) {
             _setAlgorithm(props.algorithm);
-            LichessInterface.writeChat(_gameId, "Welcome back " + _challenge.challenger.id + "! I will be using algorithm " + _algorithm + " since that is what you have set up already.");
+            if (_isChallengerHuman) {
+                LichessInterface.writeChat(_gameId, "Welcome back " + _challenge.challenger.id + "! I will be using algorithm " + _algorithm + " since that is what you have set up already.");
+            }
         }
         else {
-            if (_challenge.challenger.title != null && _challenge.challenger.title.equals("BOT")) {
+            if (_isChallengerBot) {
                 _setAlgorithm(DEFAULT_ALGORITHM_FOR_BOT);
             }
             else {
@@ -187,13 +199,32 @@ public class Game implements Runnable {
             }
 
             if (props == null) {
-                OpponentProperties.createOrUpdateAlgorithmForHuman(_challenge.challenger.id, Enums.EngineAlgorithm.NONE);
-                LichessInterface.writeChat(_gameId, "Welcome " + _challenge.challenger.id + "! Since you have never played me before, I will be using algorithm " + _algorithm + " which is my default algorithm.");
+                OpponentProperties.createOrUpdateAlgorithmForOpponent(_challenge.challenger.id, Enums.EngineAlgorithm.NONE);
+                if (_isChallengerHuman) {
+                    LichessInterface.writeChat(_gameId, "Welcome " + _challenge.challenger.id + "! Since you have never played me before, I will be using algorithm " + _algorithm + " which is my default algorithm.");
+                }
             }
             else {
-                LichessInterface.writeChat(_gameId, "Welcome back " + _challenge.challenger.id + "! I will be using algorithm " + _algorithm + ", my default algorithm, since you haven't set up an algorithm yet.");
+                if (_isChallengerHuman) {
+                    LichessInterface.writeChat(_gameId, "Welcome back " + _challenge.challenger.id + "! I will be using algorithm " + _algorithm + ", my default algorithm, since you haven't set up an algorithm yet.");
+                }
             }
         }
+    }
+
+    protected void writeWelcomeForBots() {
+        if (_isChallengerHuman) {
+            return;
+        }
+        LichessInterface.writeChat(_gameId, "Hi! You're playing against @niteknighttbot, a bot created by @niteknightt!");
+        LichessInterface.writeChat(_gameId, "GLHF!");
+    }
+
+    protected void writeGoodbyeForBots() {
+        if (_isChallengerHuman) {
+            return;
+        }
+        LichessInterface.writeChat(_gameId, "GG!");
     }
 
     /**
@@ -279,6 +310,7 @@ public class Game implements Runnable {
 
             try { Thread.sleep(100); } catch (InterruptedException interruptException) { }
         }
+        writeGoodbyeForBots();
     }
 
     /**
@@ -310,8 +342,8 @@ public class Game implements Runnable {
             Logger.info("Received chat message that the bot sent");
             return;
         }
-        Logger.info("Received chat message from human");
-        _handleChatFromHuman(event.text);
+        Logger.info("Received chat message from challenger");
+        _handleChatFromChallenger(event.text);
     }
 
     public Enums.GameState gameState() { return _gameState; }

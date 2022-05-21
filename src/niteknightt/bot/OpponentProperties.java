@@ -27,23 +27,23 @@ public class OpponentProperties {
         return _allProps;
     }
 
-    public static OpponentProperties getForHuman(String humanId) {
+    public static OpponentProperties getForOpponent(String opponentId) {
         if (_allProps == null) {
             _loadAllProps();
         }
 
         for (int i = 0; i < _allProps.size(); ++i) {
             OpponentProperties props = _allProps.get(i);
-            if (props.id.equals(humanId)) {
+            if (props.id.equals(opponentId)) {
                 return props;
             }
         }
         return null;
     }
 
-    public static void createOrUpdateAlgorithmForHuman(String humanId, Enums.EngineAlgorithm algorithm) {
+    public static void createOrUpdateAlgorithmForOpponent(String opponentId, Enums.EngineAlgorithm algorithm) {
         OpponentProperties props = new OpponentProperties();
-        props.id = humanId;
+        props.id = opponentId;
         props.algorithm = algorithm;
         createOrUpdateProperties(props);
     }
