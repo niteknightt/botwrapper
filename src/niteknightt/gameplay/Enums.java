@@ -89,12 +89,12 @@ public class Enums {
     }
 
     public enum EngineAlgorithm {
-        NONE(0), BEST_MOVE(1), WORST_MOVE(2), INSTRUCTIVE(3);
+        NONE(0), BEST_MOVE(1), WORST_MOVE(2), INSTRUCTIVE(3), JUST_THE_BEST(4);
     
         private final int value;
 
         private EngineAlgorithm(int value) {
-            if (value < 0  || value > 3) {
+            if (value < 0  || value > 4) {
                 throw new InvalidEnumValueException("Attempt to create EngineAlgorithm object with invalid value: " + value);
             }
             this.value = value;

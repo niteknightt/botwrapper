@@ -95,12 +95,6 @@ public class StockfishClient {
     }
 
     public String calcBestMove(long timeoutMs) {
-//        var uci = new UCI(defaultTimeout);
-//        uci.startStockfish();
-//        if (startGameFlag) {
-//            uci.uciNewGame();
-//        }
-//        uci.positionFen(fen);
         var result = uci.bestMove(10).getResultOrThrow();
         return result.getCurrent();
     }

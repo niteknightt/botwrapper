@@ -7,7 +7,7 @@ import niteknightt.lichessapi.*;
 public class Game implements Runnable {
 
     public static Enums.EngineAlgorithm DEFAULT_ALGORITHM_FOR_HUMAN = Enums.EngineAlgorithm.BEST_MOVE;
-    public static Enums.EngineAlgorithm DEFAULT_ALGORITHM_FOR_BOT = Enums.EngineAlgorithm.BEST_MOVE;
+    public static Enums.EngineAlgorithm DEFAULT_ALGORITHM_FOR_BOT = Enums.EngineAlgorithm.JUST_THE_BEST;
 
     protected String _gameId;
     protected Enums.GameState _gameState;
@@ -368,6 +368,9 @@ public class Game implements Runnable {
         }
         else if (_algorithm == Enums.EngineAlgorithm.INSTRUCTIVE) {
             _moveSelector = new InstructiveMoveSelector(_random, _algorithm, _stockfishClient);
+        }
+        else if (_algorithm == Enums.EngineAlgorithm.JUST_THE_BEST) {
+            _moveSelector = new JustTheBestMoveSelector(_random, _algorithm, _stockfishClient);
         }
         else {
             Logger.info("Aborting game because I could not choose a move selector for algorithm " + _algorithm);
