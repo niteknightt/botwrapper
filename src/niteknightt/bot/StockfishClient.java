@@ -40,7 +40,7 @@ public class StockfishClient {
 
     public List<MoveWithEval> calcMoves(int numMoves, long timeoutMs, Enums.Color colorToMove) {
         uci.setOption("MultiPV", Integer.valueOf(numMoves).toString());
-        var analysis = uci.analysis(6).getResultOrThrow();
+        var analysis = uci.analysis(10).getResultOrThrow();
         var moves = analysis.getAllMoves();
         List<MoveWithEval> movesWithEval = new ArrayList<MoveWithEval>();
         for (Map.Entry<Integer,Move> entry : moves.entrySet()) {
