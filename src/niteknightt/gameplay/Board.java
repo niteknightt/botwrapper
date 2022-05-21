@@ -427,6 +427,18 @@ public class Board {
 
     public Enums.Color whosTurnToGo() { return _whosTurnToGo; }
 
+    public int getFullMoveNumber() { return _fullMoveNumber; }
+
+    public int getNumPiecesOnBoard() {
+        int total = 0;
+        for (Piece piece : _pieces) {
+            if (piece.pieceType() != Enums.PieceType.BLANK) {
+                ++total;
+            }
+        }
+        return total;
+    }
+
     public void addAllPieces(List<Piece> pieces) {
         _pieces.clear();
         for (Piece piece : pieces) {

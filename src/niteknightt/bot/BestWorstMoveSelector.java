@@ -31,7 +31,11 @@ public class BestWorstMoveSelector extends EngineMoveSelector {
             _stockfishClient.setPosition(board._fen);
             List<MoveWithEval> movesWithEval = new ArrayList<MoveWithEval>();
             try {
-                movesWithEval = _stockfishClient.calcMoves(board.getLegalMoves().size(), 2000, board.whosTurnToGo());
+                Date beforeCall = new Date();
+                movesWithEval = _stockfishClient.calcMoves(legalMoves.size(), 2000, board.whosTurnToGo());
+                Date afterCall = new Date();
+                long callTime = Math.abs(afterCall.getTime() - beforeCall.getTime());
+                Logger.info("depth=10;moveNumber=" + board.getFullMoveNumber() + ";numPieces=" + board.getNumPiecesOnBoard() + ";numLegalMoves=" + legalMoves.size() + ";timeMs=" + callTime);
             }
             catch (Exception ex) {
                 Logger.error("Exception while calling calcMoves: " + ex.toString());
