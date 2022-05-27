@@ -1,12 +1,15 @@
-package niteknightt.bot;
+package niteknightt.bot.moveselectors;
 
 import java.util.*;
 
+import niteknightt.bot.Logger;
+import niteknightt.bot.MoveSelectorException;
+import niteknightt.bot.StockfishClient;
 import niteknightt.gameplay.Board;
 import niteknightt.gameplay.Enums;
 import niteknightt.gameplay.Move;
 
-public class JustTheBestMoveSelector extends EngineMoveSelector {
+public class JustTheBestMoveSelector extends MoveSelector {
 
     public JustTheBestMoveSelector(Random random, Enums.EngineAlgorithm algorithm, StockfishClient stockfishClient) {
         super(random, algorithm, stockfishClient);
@@ -28,20 +31,27 @@ public class JustTheBestMoveSelector extends EngineMoveSelector {
             Logger.debug("Best move for lack of choice: " + bestMoveUciFormat);
         }
         else {
+            boolean chooseRandomMove = false;
             _stockfishClient.setPosition(board._fen);
             try {
                 Date beforeCall = new Date();
-                bestMoveUciFormat = _stockfishClient.calcBestMove(5000);
+                bestMoveUciFormat = _stockfishClient.calcBestMove(13, 5000);
                 Date afterCall = new Date();
                 long callTime = Math.abs(afterCall.getTime() - beforeCall.getTime());
-                Logger.info("justthebest;depth=10;moveNumber=" + board.getFullMoveNumber() + ";numPieces=" + board.getNumPiecesOnBoard() + ";numLegalMoves=" + legalMoves.size() + ";timeMs=" + callTime);
+                Logger.info("justthebest;depth=13;moveNumber=" + board.getFullMoveNumber() + ";numPieces=" + board.getNumPiecesOnBoard() + ";numLegalMoves=" + legalMoves.size() + ";timeMs=" + callTime);
             }
             catch (Exception ex) {
-                Logger.error("Exception while calling calcBestMove: " + ex.toString());
+                Logger.error("Exception while calling calcBestMove: " + ex.toString() + " -- choosing random move");
+                chooseRandomMove = true;
             }
             if (bestMoveUciFormat == null || bestMoveUciFormat.length() == 0) {
-                Logger.error("Failed to get best move from stockfish");
-                throw new RuntimeException("Failed to get best move from stockfish");
+                Logger.error("Failed to get best move from stockfish -- choosing random move");
+                chooseRandomMove = true;
+            }
+            if (chooseRandomMove) {
+                int index = _random.nextInt(legalMoves.size());
+                bestMoveUciFormat = legalMoves.get(index)._uciFormat;
+                Logger.debug("Best random move: " + bestMoveUciFormat);
             }
         }
         Move engineMove = new Move(bestMoveUciFormat, board);

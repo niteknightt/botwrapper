@@ -21,6 +21,8 @@ import java.util.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import niteknightt.bot.Logger;
+
 public class LichessInterface {
 
     public static String LICHESS_API_ENDPOINT_BASE = "https://lichess.org/api/";
@@ -221,11 +223,21 @@ public class LichessInterface {
     }    
 
     public static void abortGame(String gameId) {
-        doHttpSyncPost("bot/game/" + gameId + "/abort");
+        try {
+            doHttpSyncPost("bot/game/" + gameId + "/abort");
+        }
+        catch (Exception e) {
+            Logger.error("Failed to abort game with error: " + e.toString());
+        }
     }
 
     public static void resignGame(String gameId) {
-        doHttpSyncPost("bot/game/" + gameId + "/resign");
+        try {
+            doHttpSyncPost("bot/game/" + gameId + "/resign");
+        }
+        catch (Exception e) {
+            Logger.error("Failed to resign game with error: " + e.toString());
+        }
     }
 
     public static void writeChat(String gameId, String text) {

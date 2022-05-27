@@ -1,16 +1,18 @@
-package niteknightt.bot;
+package niteknightt.bot.moveselectors;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
+import niteknightt.bot.Logger;
+import niteknightt.bot.MoveSelectorException;
+import niteknightt.bot.MoveWithEval;
+import niteknightt.bot.StockfishClient;
 import niteknightt.gameplay.Board;
 import niteknightt.gameplay.Enums;
 import niteknightt.gameplay.Move;
 
-public class InstructiveMoveSelector extends EngineMoveSelector {
-    
-    public InstructiveMoveSelector(Random random, Enums.EngineAlgorithm algorithm, StockfishClient stockfishClient) {
+public class BestWorstMoveSelector extends MoveSelector {
+
+    public BestWorstMoveSelector(Random random, Enums.EngineAlgorithm algorithm, StockfishClient stockfishClient) {
         super(random, algorithm, stockfishClient);
     }
 
@@ -33,7 +35,11 @@ public class InstructiveMoveSelector extends EngineMoveSelector {
             _stockfishClient.setPosition(board._fen);
             List<MoveWithEval> movesWithEval = new ArrayList<MoveWithEval>();
             try {
-                movesWithEval = _stockfishClient.calcMoves(board.getLegalMoves().size(), 2000, board.whosTurnToGo());
+                Date beforeCall = new Date();
+                movesWithEval = _stockfishClient.calcMoves(legalMoves.size(), 2000, board.whosTurnToGo());
+                Date afterCall = new Date();
+                long callTime = Math.abs(afterCall.getTime() - beforeCall.getTime());
+                Logger.info("bestworst;depth=10;moveNumber=" + board.getFullMoveNumber() + ";numPieces=" + board.getNumPiecesOnBoard() + ";numLegalMoves=" + legalMoves.size() + ";timeMs=" + callTime);
             }
             catch (Exception ex) {
                 Logger.error("Exception while calling calcMoves: " + ex.toString());

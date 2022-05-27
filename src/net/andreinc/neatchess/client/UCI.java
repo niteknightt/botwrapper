@@ -3,6 +3,7 @@ package net.andreinc.neatchess.client;
 import net.andreinc.neatchess.client.processor.AnalysisProcessor;
 import net.andreinc.neatchess.client.processor.BestMoveProcessor;
 import net.andreinc.neatchess.client.processor.EngineInfoProcessor;
+import niteknightt.common.UciIoLogger;
 import net.andreinc.neatchess.client.exception.*;
 import net.andreinc.neatchess.client.model.Analysis;
 import net.andreinc.neatchess.client.model.BestMove;
@@ -44,13 +45,17 @@ public class UCI {
     private Process process = null;
     private BufferedReader reader = null;
     private OutputStreamWriter writer = null;
+    private UciIoLogger logger = null;
+    private String gameId = null;
 
-    public UCI(long defaultTimeout) {
+    public UCI(long defaultTimeout, UciIoLogger logger, String gameId) {
         this.defaultTimeout = defaultTimeout;
+        this.logger = logger;
+        this.gameId = gameId;
     }
 
-    public UCI() {
-        this(DEFAULT_TIMEOUT_VALUE);
+    public UCI(UciIoLogger logger, String gameId) {
+        this(DEFAULT_TIMEOUT_VALUE, logger, gameId);
     }
 
     public void startStockfish() {
@@ -94,6 +99,9 @@ public class UCI {
         CompletableFuture<List<String>> command = supplyAsync(() -> {
             final List<String> output = new ArrayList<>();
             try {
+                logger.writeInput(gameId, cmd);
+                logger.writeInput(gameId, "isready");
+                System.out.print(cmd + "\n" + "isready\n");
                 writer.flush();
                 writer.write(cmd + "\n");
                 writer.write("isready\n");
@@ -107,13 +115,16 @@ public class UCI {
                         throw new UCIUnknownCommandException("Unexpected token: " + line);
                     }
                     output.add(line);
+                    logger.writeOutput(gameId, line);
                     if (breakCondition.test(line)) {
                         break;
                     }
                 }
             } catch (IOException e) {
+                logger.writeOutput(gameId, "[unknown-command]");
                 throw new UCIUncheckedIOException(e);
             } catch (RuntimeException e) {
+                logger.writeOutput(gameId, "[unexpected-token]");
                 throw new UCIRuntimeException(e);
             }
             return output;

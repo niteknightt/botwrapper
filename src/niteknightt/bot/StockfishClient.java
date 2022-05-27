@@ -5,6 +5,7 @@ import java.util.*;
 
 import net.andreinc.neatchess.client.*;
 import net.andreinc.neatchess.client.model.Move;
+import niteknightt.common.UciIoLogger;
 import niteknightt.gameplay.Enums;
 
 // Most of this code is from: https://www.andreinc.net/2021/04/22/writing-a-universal-chess-interface-client-in-java
@@ -18,12 +19,14 @@ public class StockfishClient {
     String fen;
     long defaultTimeout;
     boolean startGameFlag = false;
+    UciIoLogger logger = null;
 
     public StockfishClient() { }
 
-    public void init(long defaultTimeout) {
+    public void init(long defaultTimeout, String gameId) {
         this.defaultTimeout = defaultTimeout;
-        uci = new UCI(defaultTimeout);
+        logger = new UciIoLogger();
+        uci = new UCI(defaultTimeout, logger, gameId);
         uci.startStockfish();
     }
 
@@ -94,8 +97,8 @@ public class StockfishClient {
         return movesWithEval;
     }
 
-    public String calcBestMove(long timeoutMs) {
-        var result = uci.bestMove(10).getResultOrThrow();
+    public String calcBestMove(int depth, long timeoutMs) {
+        var result = uci.bestMove(depth).getResultOrThrow();
         return result.getCurrent();
     }
 
@@ -120,5 +123,7 @@ public class StockfishClient {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        logger.close();
     }
 }

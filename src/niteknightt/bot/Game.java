@@ -1,6 +1,11 @@
 package niteknightt.bot;
 
 import java.util.*;
+
+import niteknightt.bot.moveselectors.BestWorstMoveSelector;
+import niteknightt.bot.moveselectors.MoveSelector;
+import niteknightt.bot.moveselectors.InstructiveMoveSelector;
+import niteknightt.bot.moveselectors.JustTheBestMoveSelector;
 import niteknightt.gameplay.*;
 import niteknightt.lichessapi.*;
 
@@ -24,7 +29,7 @@ public class Game implements Runnable {
     protected Enums.EngineAlgorithm _algorithm;
     protected List<OpponentProperties> _opponentProerties;
     protected Date _lastGameStateUpdate;
-    protected EngineMoveSelector _moveSelector;
+    protected MoveSelector _moveSelector;
     protected boolean _isChallengerHuman;
     protected boolean _isChallengerBot;
 
@@ -48,7 +53,7 @@ public class Game implements Runnable {
         }
         _isChallengerBot = !_isChallengerHuman;
 
-        _stockfishClient.init(5000l);
+        _stockfishClient.init(5000l, _gameId);
         _stockfishClient.startGame();
 
         _board = new Board();
