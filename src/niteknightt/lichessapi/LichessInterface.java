@@ -244,7 +244,12 @@ public class LichessInterface {
         Map<String, String> params = new HashMap<String, String>();
         params.put("room", "player");
         params.put("text", text);
-        doHttpSyncPost("bot/game/" + gameId + "/chat", params);
+        try {
+            doHttpSyncPost("bot/game/" + gameId + "/chat", params);
+        }
+        catch (Exception e) {
+            Logger.error("Failed to write chat with error: " + e.toString());
+        }
     }
 
     public static LichessEvent getEvent() {
