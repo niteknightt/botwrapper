@@ -86,6 +86,7 @@ public class StockfishClient {
             newmove.eval = eval;
             newmove.matein = matein;
             newmove.ismate = (matein > 0);
+            newmove.continuation = entry.getValue().getContinuation();
             if (breakpoint == -1) {
                 movesWithEval.add(newmove);
             }

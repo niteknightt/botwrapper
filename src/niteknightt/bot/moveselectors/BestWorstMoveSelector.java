@@ -16,6 +16,10 @@ public class BestWorstMoveSelector extends MoveSelector {
         super(random, algorithm, stockfishClient);
     }
 
+    public List<MoveWithEval> getAllMoves(Board board) throws MoveSelectorException {
+        throw new RuntimeException("getAllMoves not implemented for BestWorstMoveSelector");
+    }
+    
     public Move selectMove(Board board) throws MoveSelectorException {
         List<Move> legalMoves = board.getLegalMoves();
         Logger.debug(Move.printMovesToString("These are the legal moves", legalMoves));

@@ -4,6 +4,7 @@ import java.util.*;
 
 import niteknightt.bot.Logger;
 import niteknightt.bot.MoveSelectorException;
+import niteknightt.bot.MoveWithEval;
 import niteknightt.bot.StockfishClient;
 import niteknightt.gameplay.Board;
 import niteknightt.gameplay.Enums;
@@ -15,6 +16,10 @@ public class JustTheBestMoveSelector extends MoveSelector {
         super(random, algorithm, stockfishClient);
     }
 
+    public List<MoveWithEval> getAllMoves(Board board) throws MoveSelectorException {
+        throw new RuntimeException("getAllMoves not implemented for JustTheBestMoveSelector");
+    }
+    
     public Move selectMove(Board board) throws MoveSelectorException {
         List<Move> legalMoves = board.getLegalMoves();
         Logger.debug(Move.printMovesToString("These are the legal moves", legalMoves));

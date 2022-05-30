@@ -5,4 +5,5 @@ public class MoveWithEval {
     public double eval;
     public boolean ismate;
     public int matein;
+    public String[] continuation;
 }
