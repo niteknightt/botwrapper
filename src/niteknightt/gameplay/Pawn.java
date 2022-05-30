@@ -63,9 +63,9 @@ public class Pawn extends Piece {
                     }
                 }
                 else {
-                    Position enPassantTarget = new Position();
-                    if (_board.enPassantTarget(enPassantTarget)) {
-                        if (enPassantTarget == target) {
+                    if (_board.hasEnPassantTarget()) {
+                        Position enPassantTarget = _board.getEnPassantTarget();
+                        if (enPassantTarget.equals(target)) {
                             potentialMoves.add(new Move(_position, target, _board));
                         }
                     }
@@ -93,9 +93,9 @@ public class Pawn extends Piece {
                     }
                 }
                 else {
-                    Position enPassantTarget = new Position();
-                    if (_board.enPassantTarget(enPassantTarget)) {
-                        if (enPassantTarget == target) {
+                    if (_board.hasEnPassantTarget()) {
+                        Position enPassantTarget = _board.getEnPassantTarget();
+                        if (enPassantTarget.equals(target)) {
                             potentialMoves.add(new Move(_position, target, _board));
                         }
                     }
@@ -149,9 +149,9 @@ public class Pawn extends Piece {
                     }
                 }
                 else {
-                    Position enPassantTarget = new Position();
-                    if (_board.enPassantTarget(enPassantTarget)) {
-                        if (enPassantTarget == target) {
+                    if (_board.hasEnPassantTarget()) {
+                        Position enPassantTarget = _board.getEnPassantTarget();
+                        if (enPassantTarget.equals(target)) {
                             potentialMoves.add(new Move(_position, target, _board));
                         }
                     }
@@ -179,9 +179,9 @@ public class Pawn extends Piece {
                     }
                 }
                 else {
-                    Position enPassantTarget = new Position();
-                    if (_board.enPassantTarget(enPassantTarget)) {
-                        if (enPassantTarget == target) {
+                    if (_board.hasEnPassantTarget()) {
+                        Position enPassantTarget = _board.getEnPassantTarget();
+                        if (enPassantTarget.equals(target)) {
                             potentialMoves.add(new Move(_position, target, _board));
                         }
                     }
@@ -237,9 +237,9 @@ public class Pawn extends Piece {
                     }
                 }
                 else {
-                    Position enPassantTarget = new Position();
-                    if (_board.enPassantTarget(enPassantTarget)) {
-                        if (enPassantTarget == target) {
+                    if (_board.hasEnPassantTarget()) {
+                        Position enPassantTarget = _board.getEnPassantTarget();
+                        if (enPassantTarget.equals(target)) {
                             if (_board.testMoveForLegality(new Move(_position, target, _board))) {
                                 return true;
                             }
@@ -264,9 +264,9 @@ public class Pawn extends Piece {
                     }
                 }
                 else {
-                    Position enPassantTarget = new Position();
-                    if (_board.enPassantTarget(enPassantTarget)) {
-                        if (enPassantTarget == target) {
+                    if (_board.hasEnPassantTarget()) {
+                        Position enPassantTarget = _board.getEnPassantTarget();
+                        if (enPassantTarget.equals(target)) {
                             if (_board.testMoveForLegality(new Move(_position, target, _board))) {
                                 return true;
                             }
@@ -314,9 +314,9 @@ public class Pawn extends Piece {
                     }
                 }
                 else {
-                    Position enPassantTarget = new Position();
-                    if (_board.enPassantTarget(enPassantTarget)) {
-                        if (enPassantTarget == target) {
+                    if (_board.hasEnPassantTarget()) {
+                        Position enPassantTarget = _board.getEnPassantTarget();
+                        if (enPassantTarget.equals(target)) {
                             if (_board.testMoveForLegality(new Move(_position, target, _board))) {
                                 return true;
                             }
@@ -341,9 +341,9 @@ public class Pawn extends Piece {
                     }
                 }
                 else {
-                    Position enPassantTarget = new Position();
-                    if (_board.enPassantTarget(enPassantTarget)) {
-                        if (enPassantTarget == target) {
+                    if (_board.hasEnPassantTarget()) {
+                        Position enPassantTarget = _board.getEnPassantTarget();
+                        if (enPassantTarget.equals(target)) {
                             if (_board.testMoveForLegality(new Move(_position, target, _board))) {
                                 return true;
                             }
@@ -358,7 +358,7 @@ public class Pawn extends Piece {
     
     @Override
     public boolean isAttackingSquare(Position square) {
-        if (square == _position) {
+        if (square.equals(_position)) {
             return false;
         }
         List<Position> attackSquares = Position.getSquaresWherePawnCanAttack(square, _color);

@@ -144,7 +144,7 @@ public class Rook extends Piece {
 
     @Override
     public boolean isAttackingSquare(Position square) {
-        if (square == _position) {
+        if (square.equals(_position)) {
             return false;
         }
         if (Position.areSquaresOnSameColumn(_position, square)) {

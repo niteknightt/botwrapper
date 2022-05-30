@@ -116,9 +116,7 @@ public class Move {
     }
 
     protected void _calculateIsEnPassant() {
-        Position enPassantTarget = new Position();
-        _board.enPassantTarget(enPassantTarget);
-        _isEnPassant = (_pieceType == Enums.PieceType.PAWN && _board.hasEnPassantTarget() && enPassantTarget == _target);
+        _isEnPassant = (_pieceType == Enums.PieceType.PAWN && _board.hasEnPassantTarget() && _board.getEnPassantTarget().equals(_target));
     }
 
     protected void _calculateUciFormat() {
@@ -198,10 +196,10 @@ public class Move {
             boolean sameRank = false;
             boolean sameFile = false;
             for (Piece attacker : allAttackers) {
-                if (attacker.position().row == _source.row) {
+                if (attacker.position().row == _source.row && attacker.position().col != _source.col) {
                     sameRank = true;
                 }
-                if (attacker.position().col == _source.col) {
+                if (attacker.position().col == _source.col && attacker.position().row != _source.row) {
                     sameFile = true;
                 }
             }

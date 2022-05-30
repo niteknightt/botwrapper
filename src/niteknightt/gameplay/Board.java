@@ -419,7 +419,7 @@ public class Board {
 
     public List<Piece> pieces() { return _pieces; }
 
-    public boolean enPassantTarget(Position pos) { pos = _enPassantTarget; return _hasEnPassantTarget; }
+    public Position getEnPassantTarget() { return _enPassantTarget; }
 
     public boolean hasEnPassantTarget() { return _hasEnPassantTarget; }
 

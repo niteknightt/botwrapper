@@ -109,7 +109,7 @@ public class Knight extends Piece {
 
     @Override
     public boolean isAttackingSquare(Position square) {
-        if (square == _position) {
+        if (square.equals(_position)) {
             return false;
         }
         return Position.areSquaresKnightsMoveFromEachOther(_position, square);
