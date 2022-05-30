@@ -88,7 +88,14 @@ public class BotManager implements Runnable {
         Logger.info("Closing BotManager");
 
         _eventReader.setDone();
-        try { _eventReaderThread.join(); } catch (InterruptedException ex) { }
+        if (_eventReaderThread.isAlive()) {
+            try { _eventReaderThread.join(15000); } catch (InterruptedException ex) {
+                Logger.warning("Failed to join event reader thread");
+            }
+        }
+        else {
+            Logger.warning("Event reader thread is already dead");
+        }
 
         // Remove any completed games.
         for (Map.Entry<String, Game> entry : _games.entrySet()) {
