@@ -33,6 +33,9 @@ public class Game implements Runnable {
     protected boolean _isChallengerHuman;
     protected boolean _isChallengerBot;
 
+    public static double BORDER_BETWEEN_MUCH_BETTER_AND_A_LITTLE_BETTER = 1.0;
+    public static double BORDER_BETWEEN_A_LITTLE_BETTER_AND_BASICALLY_EQUAL = 0.25;
+
     public Game(String gameId, LichessChallenge challenge) {
         _gameId = gameId;
         _challenge = challenge;
@@ -128,6 +131,9 @@ public class Game implements Runnable {
                 setGameState(Enums.GameState.ERROR);
             }
             else {
+                if (_algorithm == Enums.EngineAlgorithm.INSTRUCTIVE) {
+                    _handleChallengerMoveForInstruction(currentMove.uciFormat());
+                }
                 if (!_board.handleMoveForGame(currentMove)) {
                     Logger.error("Board says current move did not work");
                     setGameState(Enums.GameState.ERROR);
@@ -136,6 +142,103 @@ public class Game implements Runnable {
                 ++_numMovesPlayedByChallenger;
             }
         }
+    }
+
+    protected void _handleChallengerMoveForInstruction(String challengerMoveUci) {
+        List<MoveWithEval> movesAvailableForChallenger = null;
+
+        try {
+            movesAvailableForChallenger = _moveSelector.getAllMoves(_board);
+        }
+        catch (Exception e) {
+            Logger.error("Failed to get available moves for challenger");
+            setGameState(Enums.GameState.ERROR);
+            return;
+        }
+
+        int numMovesBetter = 0;
+        int numMovesMuchBetter = 0;
+        int numMovesALittleBetter = 0;
+        int numMovesBasicallyEqual = 0;
+        int numMovesEqualOrWorse = 0;
+
+        int challengerMoveIndex = -1;
+
+        // First find the challenger move and eval in the list of legal moves.
+        for (int i = 0; i < movesAvailableForChallenger.size(); ++i) {
+            MoveWithEval availableMove = movesAvailableForChallenger.get(i);
+            if (availableMove.uci.equals(challengerMoveUci)) {
+                challengerMoveIndex = i;
+                break;
+            }
+        }
+
+        // Handle when the move is not found.
+        if (challengerMoveIndex == -1) {
+            Logger.error("Failed to find challenger move in list of available moves");
+            setGameState(Enums.GameState.ERROR);
+            return;
+        }
+
+        MoveWithEval challengerMoveWithEval = movesAvailableForChallenger.get(challengerMoveIndex);
+        boolean bestMove = false;
+
+        if (challengerMoveIndex == 0) {
+            bestMove = true;
+        }
+        else {
+            numMovesBetter = challengerMoveIndex;
+            for (int i = 0; i < numMovesBetter; ++i) {
+                MoveWithEval availableMove = movesAvailableForChallenger.get(i);
+                double evalDiff = Math.abs(availableMove.eval - challengerMoveWithEval.eval);
+                if (evalDiff > BORDER_BETWEEN_MUCH_BETTER_AND_A_LITTLE_BETTER) {
+                    ++numMovesMuchBetter;
+                }
+                else if (evalDiff > BORDER_BETWEEN_A_LITTLE_BETTER_AND_BASICALLY_EQUAL) {
+                    ++numMovesALittleBetter;
+                }
+                else {
+                    ++numMovesBasicallyEqual;
+                }
+            }
+            numMovesEqualOrWorse = movesAvailableForChallenger.size() - numMovesBetter;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        if (bestMove) {
+            sb.append("That was the best move!");
+        }
+        else if (numMovesMuchBetter == 1) {
+            sb.append("There was a much better move you could have made (" + new Move(movesAvailableForChallenger.get(0).uci, _board).algebraicFormat() + ").");
+            if (challengerMoveWithEval.continuation.length > 0) {
+                Move move = new Move(challengerMoveWithEval.uci, _board);
+                _board.handleMoveForSingleAnalysis(move);
+                sb.append(" I might now play " + new Move(challengerMoveWithEval.continuation[0], _board).algebraicFormat());
+                _board.undoSingleAnalysisMove(move);
+            }
+        }
+        else if (numMovesMuchBetter > 1) {
+            sb.append("There were much better moves you could have made (such as " + new Move(movesAvailableForChallenger.get(0).uci, _board).algebraicFormat() + ").");
+            if (challengerMoveWithEval.continuation.length > 0) {
+                Move move = new Move(challengerMoveWithEval.uci, _board);
+                _board.handleMoveForSingleAnalysis(move);
+                sb.append(" I might now play " + new Move(challengerMoveWithEval.continuation[0], _board).algebraicFormat());
+                _board.undoSingleAnalysisMove(move);
+            }
+        }
+        else  if (numMovesALittleBetter == 1) {
+            sb.append("There was a slightly better move you could have made (" + new Move(movesAvailableForChallenger.get(0).uci, _board).algebraicFormat() + ").");
+        }
+        else if (numMovesALittleBetter > 1) {
+            sb.append("There were slightly better moves you could have made (such as " + new Move(movesAvailableForChallenger.get(0).uci, _board).algebraicFormat() + ").");
+        }
+        else {
+            sb.append("That was one of the best moves.");
+        }
+
+        System.out.println("About to write chat: " + sb.toString());
+        LichessInterface.writeChat(_gameId, sb.toString());
+
     }
 
     /**
@@ -150,9 +253,9 @@ public class Game implements Runnable {
             String remainingText = text.substring("algo".length());
             try {
                 int algoCode = Integer.parseInt(remainingText.trim());
-                if (algoCode < 0 || algoCode > 2) {
+                if (algoCode < 0 || algoCode > 3) {
                     Logger.info("Invalid algo choice: " + text);
-                    LichessInterface.writeChat(_gameId, "Sorry, only algos 0, 1, and 2 are working so far.");
+                    LichessInterface.writeChat(_gameId, "Sorry, only algos 0, 1, 2, and 3 are working so far.");
                     return;
                 }
                 Enums.EngineAlgorithm requestedAlgorithm = Enums.EngineAlgorithm.fromValue(algoCode);
