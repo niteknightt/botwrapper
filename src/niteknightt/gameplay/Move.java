@@ -187,7 +187,7 @@ public class Move {
             _algebraicFormat += 'N';
         }
         else if (_pieceType == Enums.PieceType.PAWN) {
-            if (_isCapture) {
+            if (_isCapture || _isEnPassant) {
                 _algebraicFormat += (char)('a' + _source.col);
             }
         }
@@ -212,7 +212,7 @@ public class Move {
                 _algebraicFormat += (char)('1' + _source.row);
             }
         }
-        if (_isCapture) {
+        if (_isCapture || _isEnPassant) {
             _algebraicFormat += 'x';
         }
         _algebraicFormat += (char)('a' + _target.col);
