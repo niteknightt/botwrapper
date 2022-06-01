@@ -2,6 +2,7 @@ package niteknightt.bot;
 
 import java.util.*;
 
+import niteknightt.lichessapi.LichessApiException;
 import niteknightt.lichessapi.LichessEnums;
 import niteknightt.lichessapi.LichessEvent;
 import niteknightt.lichessapi.LichessInterface;
@@ -10,7 +11,7 @@ public class BotManager implements Runnable {
 
     public static int MAX_CONCURRENT_CHALLENGES = 5;
 
-    protected Map<String, Game> _games;
+    protected Map<String, BotGame> _games;
     protected Map<String, Thread> _gameThreads;
     protected Map<String, Thread> _gameStateReaderThreads;
     protected Map<String, Date> _endedGames;
@@ -28,7 +29,7 @@ public class BotManager implements Runnable {
     public boolean done() { return _done; }
 
     public void init() {
-        _games = new HashMap<String, Game>();
+        _games = new HashMap<String, BotGame>();
         _gameThreads = new HashMap<String, Thread>();
         _gameStateReaderThreads = new HashMap<String, Thread>();
         _endedGames = new HashMap<String, Date>();
@@ -45,9 +46,9 @@ public class BotManager implements Runnable {
         while (!done()) {
             
             // Remove any completed games.
-            for (Map.Entry<String, Game> entry : _games.entrySet()) {
+            for (Map.Entry<String, BotGame> entry : _games.entrySet()) {
                 String gameId = entry.getKey();
-                Game game = entry.getValue();
+                BotGame game = entry.getValue();
                 if (game.done()) {
                     _endedGames.put(gameId, new Date());
                     _games.remove(gameId);
@@ -98,9 +99,9 @@ public class BotManager implements Runnable {
         }
 
         // Remove any completed games.
-        for (Map.Entry<String, Game> entry : _games.entrySet()) {
+        for (Map.Entry<String, BotGame> entry : _games.entrySet()) {
             String gameId = entry.getKey();
-            Game game = entry.getValue();
+            BotGame game = entry.getValue();
             if (!game.done()) {
                 game.forceEnd();
                 Logger.info("Forcing end to game " + gameId);
@@ -111,31 +112,42 @@ public class BotManager implements Runnable {
     }
 
     public void handleChallenge(LichessEvent event) {
-        if (!event.challenge.variant.key.equals(LichessEnums.VariantKey.STANDARD)) {
-            LichessInterface.declineChallenge(event.challenge.id);
-            System.out.println("INFO: Declined challenge ID " + event.challenge.id + " because it was not standard chess -- currently there are " + _numRunningChallenges + " running games.");
+        try {
+            if (!event.challenge.variant.key.equals(LichessEnums.VariantKey.STANDARD)) {
+                LichessInterface.declineChallenge(event.challenge.id);
+                System.out.println("INFO: Declined challenge ID " + event.challenge.id + " because it was not standard chess -- currently there are " + _numRunningChallenges + " running games.");
+            }
+            if (_numRunningChallenges >= MAX_CONCURRENT_CHALLENGES) {
+                LichessInterface.declineChallenge(event.challenge.id);
+                System.out.println("INFO: Declined challenge ID " + event.challenge.id + " because there are too many games in progress -- currently there are " + _numRunningChallenges + " running games.");
+            }
         }
-        if (_numRunningChallenges >= MAX_CONCURRENT_CHALLENGES) {
-            LichessInterface.declineChallenge(event.challenge.id);
-            System.out.println("INFO: Declined challenge ID " + event.challenge.id + " because there are too many games in progress -- currently there are " + _numRunningChallenges + " running games.");
+        catch (LichessApiException e) {
+            Logger.error("Got LichessApiException while trying to decline challenge");
         }
 
         ++_numRunningChallenges;
 
-        Game game = new Game(event.challenge.id, event.challenge);
+        BotGame game = BotGame.createGameForChallenge(event.challenge);
         Thread gameThread = new Thread(game);
         gameThread.start();
 
         _games.put(event.challenge.id, game);
         _gameThreads.put(event.challenge.id, gameThread);
 
-        LichessInterface.acceptChallenge(event.challenge.id);
+        try {
+            LichessInterface.acceptChallenge(event.challenge.id);
+        }
+        catch (LichessApiException e) {
+            Logger.error("Got LichessApiException while trying to accept challenge");
+            // TODO: Maybe close the game and gameThread here? Not totally necessary since they should timeout anyway.
+        }
         Logger.info("Accepted challenge ID " + event.challenge.id + " -- currently there are " + _numRunningChallenges + " running games");
     }
 
     public void handleChallengeCanceled(LichessEvent event) {
         if (_games.containsKey(event.challenge.id)) {
-            Game game = _games.get(event.challenge.id);
+            BotGame game = _games.get(event.challenge.id);
             game.forceEnd();
             Logger.info("Canceled challenge ID " + event.challenge.id + " -- currently there are " + _numRunningChallenges + " running games");
         }
@@ -150,7 +162,7 @@ public class BotManager implements Runnable {
 
     public void handleGameStart(LichessEvent event) {
         if (_games.containsKey(event.game.id)) {
-            Game game = _games.get(event.game.id);
+            BotGame game = _games.get(event.game.id);
             game.setStarted();
 
             LichessGameStateReader gameStateReader = new LichessGameStateReader(game);
@@ -162,8 +174,16 @@ public class BotManager implements Runnable {
         }
         else {
             Logger.error("Got game start event for game ID " + event.game.id + " but it is not in the list of games");
-            LichessInterface.writeChat(event.game.id, "Lichess tells me I'm supposed to play this game, but I don't recognize it, so I am resigning. Bye.");
-            LichessInterface.resignGame(event.game.id);
+            try {
+                LichessInterface.writeChat(event.game.id, "Lichess tells me I'm supposed to play this game, but I don't recognize it, so I am resigning. Bye.");
+            }
+            catch (LichessApiException e) { }
+            try {
+                LichessInterface.resignGame(event.game.id);
+            }
+            catch (LichessApiException e) {
+                Logger.warning("Got LichessApiException while trying to resign a game that I could not start");
+            }
         }
     }
 
@@ -174,8 +194,16 @@ public class BotManager implements Runnable {
         }
         else {
             Logger.error("Got game finish event for game ID " + event.game.id + " but it is not in the list of games");
-            LichessInterface.writeChat(event.game.id, "Lichess tells me I'm supposed to finish this game, but I don't recognize it, so I am resigning. Bye.");
-            LichessInterface.resignGame(event.game.id);
+            try {
+                LichessInterface.writeChat(event.game.id, "Lichess tells me I'm supposed to finish this game, but I don't recognize it, so I am resigning. Bye.");
+            }
+            catch (LichessApiException e) { }
+            try {
+                LichessInterface.resignGame(event.game.id);
+            }
+            catch (LichessApiException e) {
+                Logger.warning("Got LichessApiException while trying to resign a game that I could not finish");
+            }
         }
     }
 }

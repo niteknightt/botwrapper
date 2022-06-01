@@ -21,13 +21,13 @@ public class LichessGameStateReader implements Runnable {
 
     protected boolean _done = false;
     protected boolean _running = true;
-    protected Game _game;
+    protected BotGame _game;
 
     public boolean done() { return _done; }
     public void setDone() { _done = true; }
     public void setNotDone() { _done = false; }
 
-    public LichessGameStateReader(Game game) {
+    public LichessGameStateReader(BotGame game) {
         _game = game;
     }
 
@@ -53,16 +53,16 @@ public class LichessGameStateReader implements Runnable {
         URL url;
         URLConnection conn;
         try {
-            url = new URL(LichessInterface.LICHESS_API_ENDPOINT_BASE + "bot/game/stream/" + _game.gameId());
+            url = new URL(LichessInterface.LICHESS_API_ENDPOINT_BASE + "bot/game/stream/" + _game.getGameId());
         }
         catch (MalformedURLException e) {
-            throw new RuntimeException("Got MalformedURLException for this URL: " + LichessInterface.LICHESS_API_ENDPOINT_BASE + "bot/game/stream/" + _game.gameId());
+            throw new RuntimeException("Got MalformedURLException for this URL: " + LichessInterface.LICHESS_API_ENDPOINT_BASE + "bot/game/stream/" + _game.getGameId());
         }
         try {
             conn = url.openConnection();
         }
         catch (IOException e) {
-            throw new RuntimeException("Got IOException for this URL: " + LichessInterface.LICHESS_API_ENDPOINT_BASE + "bot/game/stream/" + _game.gameId());
+            throw new RuntimeException("Got IOException for this URL: " + LichessInterface.LICHESS_API_ENDPOINT_BASE + "bot/game/stream/" + _game.getGameId());
         }
 
         conn.setRequestProperty (LichessInterface.AUTH_KEY_TEXT, LichessInterface.AUTH_VALUE_TEXT);

@@ -28,6 +28,8 @@ public class LichessInterface {
     public static String LICHESS_API_ENDPOINT_BASE = "https://lichess.org/api/";
     public static String AUTH_KEY_TEXT = "Authorization";
     public static String AUTH_VALUE_TEXT = "Bearer lip_NkdnIybjkl2B8A1Ue85k";
+    public static int DEFAULT_NUMBER_OF_ATTEMPTS = 3;
+
     public static HttpClient client = HttpClient.newHttpClient();
  
     public static String doHttpSyncGet(String endpoint) {
@@ -56,59 +58,19 @@ public class LichessInterface {
         }
     }
 
-    public static void doHttpSyncPostNoBody(String endpoint) {
-        URL url;
-        try {
-            url = new URL(LICHESS_API_ENDPOINT_BASE + endpoint);
-        }
-        catch (MalformedURLException e) {
-            throw new RuntimeException("Got MalformedURLException for this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint);
-        }
-
-        HttpURLConnection conn;
-        try {
-            conn = (HttpURLConnection)url.openConnection();
-        }
-        catch (IOException e) {
-            throw new RuntimeException("Got IOException for this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint);
-        }
-
-        try {
-            conn.setRequestMethod("POST");
-        }
-        catch (ProtocolException e) {
-            throw new RuntimeException("Got ProtocolException for POST to this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint);
-        }
-
-        conn.setRequestProperty (LichessInterface.AUTH_KEY_TEXT, LichessInterface.AUTH_VALUE_TEXT);
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        conn.setRequestProperty("Content-Length", String.valueOf(0));
-        conn.setDoOutput(true);
-
-        try {
-            Reader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
-
-            for (int c; (c = in.read()) >= 0;)
-                System.out.print((char)c);
-
-            StringBuilder sb = new StringBuilder();
-            for (int c; (c = in.read()) >= 0;)
-                sb.append((char)c);
-            //String response = sb.toString();
-        }
-        catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Got UnsupportedEncodingException for this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint);
-        }
-        catch (IOException e) {
-            throw new RuntimeException("Got IOException for this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint);
-        }
+    public static boolean doHttpSyncPost(String endpoint) {
+        return doHttpSyncPost(endpoint, DEFAULT_NUMBER_OF_ATTEMPTS, null);
     }
 
-    public static void doHttpSyncPost(String endpoint) {
-        doHttpSyncPost(endpoint, null);
+    public static boolean doHttpSyncPost(String endpoint, int numAttempts) {
+        return doHttpSyncPost(endpoint, numAttempts, null);
     }
 
-    public static void doHttpSyncPost(String endpoint, Map<String, String> params) {
+    public static boolean doHttpSyncPost(String endpoint, Map<String, String> params) {
+        return doHttpSyncPost(endpoint, DEFAULT_NUMBER_OF_ATTEMPTS, params);
+    }
+
+    public static boolean doHttpSyncPost(String endpoint, int numAttempts, Map<String, String> params) {
         boolean hasBody = (params != null && !params.isEmpty());
 
         URL url;
@@ -116,7 +78,7 @@ public class LichessInterface {
             url = new URL(LICHESS_API_ENDPOINT_BASE + endpoint);
         }
         catch (MalformedURLException e) {
-            throw new RuntimeException("Got MalformedURLException for this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint);
+            throw new RuntimeException("Failed to create this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint + ": " + e.toString());
         }
 
         byte[] postDataBytes = null;
@@ -132,7 +94,7 @@ public class LichessInterface {
                 postDataBytes = postData.toString().getBytes("UTF-8");
             }
             catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("Got UnsupportedEncodingException for this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint);
+                throw new RuntimeException("Failed to setup data for this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint + ": " + e.toString());
             }
         }
 
@@ -141,14 +103,14 @@ public class LichessInterface {
             conn = (HttpURLConnection)url.openConnection();
         }
         catch (IOException e) {
-            throw new RuntimeException("Got IOException for this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint);
+            throw new RuntimeException("Failed to open connection to this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint + ": " + e.toString());
         }
 
         try {
             conn.setRequestMethod("POST");
         }
         catch (ProtocolException e) {
-            throw new RuntimeException("Got ProtocolException for POST to this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint);
+            throw new RuntimeException("Failed to set POST method for this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint + ": " + e.toString());
         }
 
         conn.setRequestProperty (LichessInterface.AUTH_KEY_TEXT, LichessInterface.AUTH_VALUE_TEXT);
@@ -168,28 +130,38 @@ public class LichessInterface {
                 conn.getOutputStream().write(postDataBytes);
             }
             catch (IOException e) {
-                throw new RuntimeException("Got IOException for this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint);
+                throw new RuntimeException("Failed to write body bytes to this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint + ": " + e.toString());
             }
         }
 
-        try {
-            Reader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
-            in.getClass(); // This line here just to avoid compiler warning.
-            
-            //for (int c; (c = in.read()) >= 0;)
-            //    System.out.print((char)c);
-
-            //StringBuilder sb = new StringBuilder();
-            //for (int c; (c = in.read()) >= 0;)
-            //    sb.append((char)c);
-            //String response = sb.toString();
+        int attemptsRemaining = numAttempts;
+        boolean success = false;
+        while (!success && attemptsRemaining > 0) {
+            try {
+                Reader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+                in.getClass(); // This line here just to avoid compiler warning.
+                success = true;
+                
+                //for (int c; (c = in.read()) >= 0;)
+                //    System.out.print((char)c);
+    
+                //StringBuilder sb = new StringBuilder();
+                //for (int c; (c = in.read()) >= 0;)
+                //    sb.append((char)c);
+                //String response = sb.toString();
+            }
+            catch (UnsupportedEncodingException e) {
+                --attemptsRemaining;
+                Logger.error("Failed to communicate to this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint + ": " + e.toString());
+                try { Thread.sleep(100); } catch (InterruptedException ex) { }
+            }
+            catch (IOException e) {
+                --attemptsRemaining;
+                Logger.error("Failed in communication with this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint + ": " + e.toString());
+                try { Thread.sleep(100); } catch (InterruptedException ex) { }
+            }
         }
-        catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Got UnsupportedEncodingException for this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint);
-        }
-        catch (IOException e) {
-            throw new RuntimeException("Got IOException for this URL: " + LICHESS_API_ENDPOINT_BASE + endpoint);
-        }
+        return success;
     }
 
     public static LichessApiObject httpSyncGetWrapper(String endpoint, Class<?> aclass) {
@@ -210,45 +182,43 @@ public class LichessInterface {
         return (LichessProfile)httpSyncGetWrapper("account", LichessProfile.class);
     }    
 
-    public static void acceptChallenge(String challengeId) {
-        doHttpSyncPost("challenge/" + challengeId + "/accept");
+    public static void acceptChallenge(String challengeId) throws LichessApiException {
+        if (!doHttpSyncPost("challenge/" + challengeId + "/accept")) {
+            throw new LichessApiException();
+        }
     }    
 
-    public static void declineChallenge(String challengeId) {
-        doHttpSyncPost("challenge/" + challengeId + "/decline");
+    public static void declineChallenge(String challengeId) throws LichessApiException {
+        if (!doHttpSyncPost("challenge/" + challengeId + "/decline")) {
+            throw new LichessApiException();
+        }
     }
 
-    public static void makeMove(String gameId, String move) {
-        doHttpSyncPost("bot/game/" + gameId + "/move/" + move);
+    public static void makeMove(String gameId, String move) throws LichessApiException {
+        if (!doHttpSyncPost("bot/game/" + gameId + "/move/" + move)) {
+            throw new LichessApiException();
+        }
     }    
 
-    public static void abortGame(String gameId) {
-        try {
-            doHttpSyncPost("bot/game/" + gameId + "/abort");
-        }
-        catch (Exception e) {
-            Logger.error("Failed to abort game with error: " + e.toString());
+    public static void abortGame(String gameId) throws LichessApiException {
+        if (!doHttpSyncPost("bot/game/" + gameId + "/abort")) {
+            throw new LichessApiException();
         }
     }
 
-    public static void resignGame(String gameId) {
-        try {
-            doHttpSyncPost("bot/game/" + gameId + "/resign");
-        }
-        catch (Exception e) {
-            Logger.error("Failed to resign game with error: " + e.toString());
+    public static void resignGame(String gameId) throws LichessApiException {
+        if (!doHttpSyncPost("bot/game/" + gameId + "/resign")) {
+            throw new LichessApiException();
         }
     }
 
-    public static void writeChat(String gameId, String text) {
+    public static void writeChat(String gameId, String text) throws LichessApiException {
         Map<String, String> params = new HashMap<String, String>();
         params.put("room", "player");
         params.put("text", text);
-        try {
-            doHttpSyncPost("bot/game/" + gameId + "/chat", params);
-        }
-        catch (Exception e) {
-            Logger.error("Failed to write chat with error: " + e.toString());
+        
+        if (!doHttpSyncPost("bot/game/" + gameId + "/chat", params)) {
+            throw new LichessApiException();
         }
     }
 
