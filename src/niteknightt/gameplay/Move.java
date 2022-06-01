@@ -2,6 +2,8 @@ package niteknightt.gameplay;
 
 import java.util.*;
 
+import niteknightt.gameplay.Enums.PieceType;
+
 public class Move {
 
     public Move() {
@@ -30,7 +32,7 @@ public class Move {
         _uciFormat = uciFormat;
         _ruinedEnPassant = false;
         _enabledEnPassant = false;
-        _calculateInternalValues();
+        _calculateInternalValuesWithUci();
         _findColor();
         _findPieceType();
         _calculateIsCapture();
@@ -61,6 +63,52 @@ public class Move {
     public Position ruinedEnPassantTarget() { return _ruinedEnPassantTarget; }
     public boolean enabledEnPassant() { return _enabledEnPassant; }
     public Position enabledEnPassantTarget() { return _enabledEnPassantTarget; }
+
+    protected void _init(String text, Board board) {
+        if (_isTextUciFormat(text)) {
+            _initFromUci(text, board);
+        }
+        else {
+            _initFromAlgebraic(text, board);
+        }
+    }
+
+    protected void _initFromUci(String uciFormat, Board board) {
+        _board = board;
+        _uciFormat = uciFormat;
+        _ruinedEnPassant = false;
+        _enabledEnPassant = false;
+        _calculateInternalValuesWithUci();
+        _findColor();
+        _findPieceType();
+        _calculateIsCapture();
+        _calculateIsCastle();
+        _calculateIsEnPassant();
+        _calculateAlgebraicFormat();
+    }
+
+    protected void _initFromAlgebraic(String algebraicFormat, Board board) {
+
+    }
+
+    protected boolean _isTextUciFormat(String text) {
+        if (text == null) {
+            throw new RuntimeException("Received null text when initializing move");
+        }
+
+        if (text.length() < 4) {
+            return false;
+        }
+
+        if (text.charAt(0) >= 'a' && text.charAt(0) <= 'h' &&
+            text.charAt(2) >= 'a' && text.charAt(2) <= 'h' &&
+            text.charAt(1) >= '1' && text.charAt(1) <= '8' &&
+            text.charAt(3) >= '1' && text.charAt(3) <= '8') {
+                return true;
+        }
+
+        return false;
+    }
 
     void setPromotionResult(Enums.PieceType val) {
         if (!_isPromotion) {
@@ -144,7 +192,162 @@ public class Move {
         }
     }
 
-    protected void _calculateInternalValues() {
+    protected void _calculateInternalValuesWithUci() {
+        _source = Position.uciToInternal(_uciFormat.substring(0, 2));
+        _target = Position.uciToInternal(_uciFormat.substring(2, 4));
+        
+        if (_uciFormat.length() == 5) {
+            _isPromotion = true;
+            if (_uciFormat.charAt(4) == 'q') {
+                _promotionResult = Enums.PieceType.QUEEN;
+            }
+            else if (_uciFormat.charAt(4) == 'b') {
+                _promotionResult = Enums.PieceType.BISHOP;
+            }
+            else if (_uciFormat.charAt(4) == 'n' || _uciFormat.charAt(4) == 'k') {
+                _promotionResult = Enums.PieceType.KNIGHT;
+            }
+            else if (_uciFormat.charAt(4) == 'r') {
+                _promotionResult = Enums.PieceType.ROOK;
+            }
+        }
+        else {
+            _isPromotion = false;
+            _promotionResult = Enums.PieceType.BLANK;
+        }
+    }
+
+    protected void _calculateInternalValuesWithAlgebraic() {
+        _isCheck = false;
+        _isMate = false;
+        _isCastle = false;
+        _castleSide = Enums.CastleSide.KINGSIDE;
+        _isPromotion = false;
+        _promotionResult = PieceType.BLANK;
+
+        int charsToIgnore = 0;
+        if (_algebraicFormat.endsWith("+")) {
+            _isCheck = true;
+        }
+        else if (_algebraicFormat.endsWith("#")) {
+            _isMate = true;
+        }
+        if (_algebraicFormat.startsWith("O-O-O")) {
+            _isCastle = true;
+            _castleSide = Enums.CastleSide.QUEENSIDE;
+        }
+        else if (_algebraicFormat.startsWith("O-O")) {
+            _isCastle = true;
+            _castleSide = Enums.CastleSide.KINGSIDE;
+        }
+
+        _color = _board.whosTurnToGo();
+
+        if (_isCastle) {
+            if (_castleSide == Enums.CastleSide.KINGSIDE) {
+                if (_color == Enums.Color.WHITE) {
+                    _source = new Position(4, 0);
+                    _target = new Position(6, 0);
+                }
+                else {
+                    _source = new Position(4, 7);
+                    _target = new Position(6, 7);
+                }
+            }
+            else {
+                if (_color == Enums.Color.WHITE) {
+                    _source = new Position(4, 0);
+                    _target = new Position(2, 0);
+                }
+                else {
+                    _source = new Position(4, 7);
+                    _target = new Position(2, 7);
+                }
+            }
+            return;
+        }
+
+        int numExtraCharsAtEnd = 0;
+        if (_isMate || _isCheck) {
+            ++numExtraCharsAtEnd;
+        }
+        if (_isPromotion) {
+            numExtraCharsAtEnd += 2;
+        }
+
+        char firstChar = _algebraicFormat.charAt(0);
+        char secondChar = _algebraicFormat.charAt(1);
+        if (firstChar >= 'a' && firstChar <= 'h') {
+            // Pawn move
+            if (secondChar == 'x') {
+                // Capture with pawn
+                int capturedRank = Character.getNumericValue(_algebraicFormat.charAt(3));
+                int increment = (_color == Enums.Color.WHITE ? -1 : 1);
+                _source = new Position(firstChar - 'a', capturedRank - 1 + increment);
+                _target = new Position(_algebraicFormat.charAt(2) - 'a', capturedRank - 1);
+            }
+            else {
+                // Pawn push
+                int targetRank = Character.getNumericValue(secondChar);
+                _target = new Position(firstChar - 'a', targetRank - 1);
+                int increment = (_color == Enums.Color.WHITE ? -1 : 1);
+                boolean done = false;
+                boolean found = false;
+                int foundRank = -1;
+                int rankToCheck = targetRank + increment;
+                while (!done) {
+                    if (Math.abs(rankToCheck - targetRank) > 2 || rankToCheck == 0 || rankToCheck == 9) {
+                        break;
+                    }
+                    Position posToCheck = new Position(firstChar - 'a', rankToCheck - 1);
+                    Piece pieceAtPos = _board.pieceAt(posToCheck);
+                    if (pieceAtPos.pieceType() != Enums.PieceType.BLANK) {
+                        if (pieceAtPos.pieceType() != Enums.PieceType.PAWN) {
+                            break;
+                        }
+                        if (pieceAtPos.color() != _color) {
+                            break;
+                        }
+                        found = true;
+                        foundRank = rankToCheck;
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw new RuntimeException("Failed to find original position of pawn push");
+                }
+                if (foundRank - targetRank == 2 && foundRank != 7) {
+                    throw new RuntimeException("Found pawn push 2 squares but original position not on 7th rank");
+                }
+                if (targetRank - foundRank == 2 && foundRank != 2) {
+                    throw new RuntimeException("Found pawn push 2 squares but original position not on 2nd rank");
+                }
+                _source = new Position(firstChar - 'a', foundRank - 1);
+            }
+        }
+        else if (firstChar == 'N') {
+            char thirdChar = _algebraicFormat.charAt(2);
+            if (thirdChar >= 'a' && thirdChar <= 'h') {
+                // Both knights could have made the move
+
+            }
+            if (_algebraicFormat.length() >= 4) {
+                char fourthChar = _algebraicFormat.charAt(3);
+
+            }
+        }
+
+
+
+        int lastCharPosition = _algebraicFormat.length() - 1 - charsToIgnore;
+        char lastChar = _algebraicFormat.charAt(lastCharPosition);
+        char penultimateChar = _algebraicFormat.charAt(lastCharPosition - 1);
+        if (penultimateChar == '=' &&
+            (lastChar == 'B' || lastChar == 'N' || lastChar == 'R' || lastChar == 'Q')) {
+                _isPromotion = true;
+                charsToIgnore += 2;
+        }
+
         _source = Position.uciToInternal(_uciFormat.substring(0, 2));
         _target = Position.uciToInternal(_uciFormat.substring(2, 4));
         
@@ -284,5 +487,7 @@ public class Move {
     protected Position _ruinedEnPassantTarget = new Position();
     protected boolean _enabledEnPassant;
     protected Position _enabledEnPassantTarget = new Position();
+    protected boolean _isCheck;
+    protected boolean _isMate;
     
 }
