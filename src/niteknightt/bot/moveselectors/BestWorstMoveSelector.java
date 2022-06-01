@@ -36,7 +36,7 @@ public class BestWorstMoveSelector extends MoveSelector {
             Logger.debug("Best move for lack of choice: " + bestMoveUciFormat);
         }
         else {
-            _stockfishClient.setPosition(board._fen);
+            _stockfishClient.setPosition(board.getFen());
             List<MoveWithEval> movesWithEval = new ArrayList<MoveWithEval>();
             try {
                 Date beforeCall = new Date();

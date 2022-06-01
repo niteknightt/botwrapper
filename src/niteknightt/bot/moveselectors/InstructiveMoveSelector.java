@@ -32,7 +32,7 @@ public class InstructiveMoveSelector extends MoveSelector {
             Logger.debug("Best move for lack of choice: " + bestMoveUciFormat);
         }
         else {
-            _stockfishClient.setPosition(board._fen);
+            _stockfishClient.setPosition(board.getFen());
             List<MoveWithEval> movesWithEval = new ArrayList<MoveWithEval>();
             try {
                 Date beforeCall = new Date();
@@ -90,7 +90,7 @@ public class InstructiveMoveSelector extends MoveSelector {
             return Arrays.asList(moveWithEval);
         }
         else {
-            _stockfishClient.setPosition(board._fen);
+            _stockfishClient.setPosition(board.getFen());
             List<MoveWithEval> movesWithEval = new ArrayList<MoveWithEval>();
             try {
                 Date beforeCall = new Date();

@@ -37,7 +37,7 @@ public class JustTheBestMoveSelector extends MoveSelector {
         }
         else {
             boolean chooseRandomMove = false;
-            _stockfishClient.setPosition(board._fen);
+            _stockfishClient.setPosition(board.getFen());
             try {
                 Date beforeCall = new Date();
                 bestMoveUciFormat = _stockfishClient.calcBestMove(13, 5000);
