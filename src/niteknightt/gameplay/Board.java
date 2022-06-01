@@ -1,6 +1,8 @@
 package niteknightt.gameplay;
 import java.util.*;
 
+import niteknightt.bot.Logger;
+
 
 public class Board {
     
@@ -11,7 +13,7 @@ public class Board {
     protected int _halfMoveClock;
     protected int _fullMoveNumber;
     protected boolean _isCheck;
-    public String _fen;
+    protected String _fen;
     protected GameHistory _gameHistory = new GameHistory();
     protected List<Move> _legalMoves = new ArrayList<Move>();
     protected boolean _hasLegalMove;
@@ -168,8 +170,9 @@ public class Board {
         }
         setFullMoveNumber(Integer.parseInt(fullMoveNumberText));
 
+        _calculateFen();
         _calculateLegalMoves();    
-        _calculateHasLegalMove();    
+        _calculateHasLegalMove();
     }
 
     public boolean handleMoveForGame(Move move) {
@@ -183,27 +186,16 @@ public class Board {
         return true;
     }
 
-    public void handleMoveForFullAnalysis(Move move) {
-        //MAINLOG("Handling move for full analysis " << move.algebraicFormat())
-        _handleMove(move);
-        _calculateLegalMoves();
-    }
-
-    public void handleMoveForSingleAnalysis(Move move) {
-        //MAINLOG("Handling move for single analysis " << move.algebraicFormat())
-        _handleMove(move);
-        _calculateHasLegalMove();
-    }
-
-    public void undoFullAnalysisMove(Move move) {
-        //MAINLOG("Undoing full analysis move " << move.algebraicFormat())
-        _undoMove(move);
-        _calculateLegalMoves();    
-    }
-
     public void undoSingleAnalysisMove(Move move) {
         //MAINLOG("Undoing single analysis move " << move.algebraicFormat())
         _undoMove(move);
+        _calculateHasLegalMove();
+    }
+
+    public void undoMoveForGame(Move move) {
+        //MAINLOG("Undoing single analysis move " << move.algebraicFormat())
+        _undoMove(move);
+        _calculateLegalMoves();    
         _calculateHasLegalMove();
     }
 
@@ -425,6 +417,8 @@ public class Board {
 
     public boolean isCheck() { return _isCheck; }
 
+    public String getFen() { return _fen; }
+
     public Enums.Color whosTurnToGo() { return _whosTurnToGo; }
 
     public int getFullMoveNumber() { return _fullMoveNumber; }
@@ -526,11 +520,9 @@ public class Board {
             }
         }
     
-        boolean capture = (_pieces.get(endIndex).pieceType() != Enums.PieceType.BLANK);
-    
         _prevHalfMoveClock = _halfMoveClock;
     
-        if (pawnMove || capture) {
+        if (pawnMove || move.isCapture()) {
             _halfMoveClock = 0;
         }
     
@@ -588,7 +580,7 @@ public class Board {
         _isCheck = _scanForCheck();
     
         _calculateFen();
-        //MAINLOG("FEN: " << _fen)
+//        Logger.info("Handled move: " + move.algebraicFormat() + " FEN: " + _fen);
     
         _gameHistory.addMove(move, _fen);
     }
@@ -728,14 +720,11 @@ public class Board {
         //MAINLOG("FEN: " << _fen)
     
         if (!_fen.equals(lastFen)) {
-            //MAINLOG("ERROR ERROR ERROR !!!!! Fen does not match after undo")
-            //MAINLOG("Expected fen:")
-            //MAINLOG(lastFen)
-            //MAINLOG("Fen after undo:")
-            //MAINLOG(_fen)
-            //MAINLOG("Fen before undo:")
-            //MAINLOG(fenBeforeUndo)
-            //MAINLOG("Move was " << lastmove.algebraicFormat())
+            Logger.error("Fen does not match after undo");
+            Logger.error("Expected fen: " + lastFen);
+            Logger.error("Fen after undo: " + _fen);
+            Logger.error("Move was " + lastMove.algebraicFormat());
+
             throw new RuntimeException("ERROR: Fen does not match after undo");
         }
     
