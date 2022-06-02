@@ -225,6 +225,9 @@ public class Move {
         _isPromotion = false;
         _promotionResult = PieceType.BLANK;
 
+        NotationConverter converter = new NotationConverter(_board);
+        converter.handleAlgebraicNotation(_algebraicFormat);
+        String text = _algebraicFormat;
         int charsToIgnore = 0;
         if (_algebraicFormat.endsWith("+")) {
             _isCheck = true;

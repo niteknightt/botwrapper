@@ -2,9 +2,12 @@ package niteknightt.bot;
 
 import java.util.Scanner;
 
+import niteknightt.common.Helpers;
+
 public class BotMain {
     
     public static void main(String[] args) throws Exception {
+        Helpers.initLog();
         BotManager botManager = new BotManager();
         Thread botManagerThread = new Thread(botManager);
         botManagerThread.start();

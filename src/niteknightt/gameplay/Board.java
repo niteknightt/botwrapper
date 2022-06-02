@@ -2,6 +2,7 @@ package niteknightt.gameplay;
 import java.util.*;
 
 import niteknightt.bot.Logger;
+import niteknightt.gameplay.Enums.PieceType;
 
 
 public class Board {
@@ -472,6 +473,14 @@ public class Board {
 
     public void setPrevHalfMoveClock(int clock) { _prevHalfMoveClock = clock; }
 
+    public Piece getKing(Enums.Color color) {
+        for (Piece piece : _pieces) {
+            if (piece.pieceType() == Enums.PieceType.KING && piece.color() == color) {
+                return piece;
+            }
+        }
+        throw new RuntimeException("Failed to find king of color " + color.toString());
+    }
     protected void _handleMove(Move move) {
         Position startPos = move.source();
         Position endPos = move.target();

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import niteknightt.gameplay.Board;
 import niteknightt.gameplay.Move;
+import niteknightt.gameplay.NotationConverter;
 
 public class MainTests {
     
@@ -171,4 +172,19 @@ public class MainTests {
         System.out.println("Done");
     }
 
+    @Test
+    void checkAlgebraicTranslationOfAllMoves() {
+        String fen = "r1bqk2r/1ppp2pp/pbn5/3nPpB1/2Bp4/1QP2N2/PP1N1PPP/R3K2R w KQkq f6 0 10";
+        Board board = new Board();
+        board.setupFromFen(fen);
+        List<Move> legalMoves = board.getLegalMoves();
+        NotationConverter converter = new NotationConverter(board);
+        for (Move move : legalMoves) {
+            converter.handleAlgebraicNotation(move.algebraicFormat());
+            assertEquals(move.source().col, converter.sourcecol());
+            assertEquals(move.source().row, converter.sourcerow());
+            assertEquals(move.target().col, converter.targetcol());
+            assertEquals(move.target().row, converter.targetrow());
+        }
+    }
 }

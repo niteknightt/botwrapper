@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import niteknightt.gameplay.Enums;
+
 public class Helpers {
     
     private static long lastLogId;
@@ -18,11 +20,7 @@ public class Helpers {
     public static SimpleDateFormat formatForFilename = new SimpleDateFormat("yyyyMMddHHmmss");
     public static SimpleDateFormat formatForLog = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
-    static {
-        init();
-    }
-
-    private static void init() {
+    public static void initLog() {
         loadLastLogId();
     }
 
@@ -77,5 +75,22 @@ public class Helpers {
         lastLogId += LOG_ID_INCREMENT;
         saveLastLogId();
         return lastLogId;
+    }
+
+    public static Enums.PieceType letterToPieceType(char letter) {
+        switch (letter) {
+            case 'N':
+                return Enums.PieceType.KNIGHT;
+            case 'B':
+                return Enums.PieceType.BISHOP;
+            case 'R':
+                return Enums.PieceType.ROOK;
+            case 'Q':
+                return Enums.PieceType.QUEEN;
+            case 'K':
+                return Enums.PieceType.KING;
+            default:
+                throw new RuntimeException("Failed to find piece type for letter " + letter);
+        }
     }
 }
