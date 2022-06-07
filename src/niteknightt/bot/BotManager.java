@@ -114,12 +114,21 @@ public class BotManager implements Runnable {
     public void handleChallenge(LichessEvent event) {
         try {
             if (!event.challenge.variant.key.equals(LichessEnums.VariantKey.STANDARD)) {
+                System.out.println("INFO: Declining challenge ID " + event.challenge.id + " because it was not standard chess.");
                 LichessInterface.declineChallenge(event.challenge.id);
-                System.out.println("INFO: Declined challenge ID " + event.challenge.id + " because it was not standard chess -- currently there are " + _numRunningChallenges + " running games.");
+                return;
             }
             if (_numRunningChallenges >= MAX_CONCURRENT_CHALLENGES) {
+                System.out.println("INFO: Declining challenge ID " + event.challenge.id + " because there are too many games in progress.");
                 LichessInterface.declineChallenge(event.challenge.id);
-                System.out.println("INFO: Declined challenge ID " + event.challenge.id + " because there are too many games in progress -- currently there are " + _numRunningChallenges + " running games.");
+                return;
+            }
+            if ((event.challenge.challenger.title == null || !event.challenge.challenger.title.equals("BOT")) &&
+                event.challenge.rated) {
+                    // Rated challenge from human - decline
+                    System.out.println("INFO: Declining challenge ID " + event.challenge.id + " because it is a rated challenge from a human.");
+                    LichessInterface.declineChallenge(event.challenge.id);
+                    return;
             }
         }
         catch (LichessApiException e) {
@@ -140,8 +149,10 @@ public class BotManager implements Runnable {
         }
         catch (LichessApiException e) {
             Logger.error("Got LichessApiException while trying to accept challenge");
-            // TODO: Maybe close the game and gameThread here? Not totally necessary since they should timeout anyway.
+            game.setFinished();
+            return;
         }
+
         Logger.info("Accepted challenge ID " + event.challenge.id + " -- currently there are " + _numRunningChallenges + " running games");
     }
 

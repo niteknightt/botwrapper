@@ -20,7 +20,7 @@ public class Rook extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 possibleMoves.add(move);
             }
@@ -35,7 +35,7 @@ public class Rook extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 possibleMoves.add(move);
             }
@@ -50,7 +50,7 @@ public class Rook extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 possibleMoves.add(move);
             }
@@ -65,7 +65,7 @@ public class Rook extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 possibleMoves.add(move);
             }
@@ -84,7 +84,7 @@ public class Rook extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 return true;
             }
@@ -99,7 +99,7 @@ public class Rook extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 return true;
             }
@@ -114,7 +114,7 @@ public class Rook extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 return true;
             }
@@ -129,7 +129,7 @@ public class Rook extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 return true;
             }

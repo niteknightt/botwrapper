@@ -28,7 +28,7 @@ public class InstructiveMoveSelector extends MoveSelector {
         }
 
         if (legalMoves.size() == 1) {
-            bestMoveUciFormat =  legalMoves.get(0)._uciFormat;
+            bestMoveUciFormat =  legalMoves.get(0).uciFormat();
             Logger.debug("Best move for lack of choice: " + bestMoveUciFormat);
         }
         else {
@@ -47,7 +47,7 @@ public class InstructiveMoveSelector extends MoveSelector {
             if (movesWithEval.size() == 0) {
                 Logger.error("Zero moves from stockfish even though there are legal moves");
                 int index = _random.nextInt(legalMoves.size());
-                bestMoveUciFormat = legalMoves.get(index)._uciFormat;
+                bestMoveUciFormat = legalMoves.get(index).uciFormat();
                 Logger.debug("Best random move: " + bestMoveUciFormat);
             }
             else {
@@ -81,7 +81,7 @@ public class InstructiveMoveSelector extends MoveSelector {
         }
 
         if (legalMoves.size() == 1) {
-            bestMoveUciFormat =  legalMoves.get(0)._uciFormat;
+            bestMoveUciFormat =  legalMoves.get(0).uciFormat();
             MoveWithEval moveWithEval = new MoveWithEval();
             moveWithEval.eval = -1000.0;
             moveWithEval.ismate = false;
@@ -105,7 +105,7 @@ public class InstructiveMoveSelector extends MoveSelector {
             if (movesWithEval.size() == 0) {
                 Logger.error("Zero moves from stockfish even though there are legal moves");
                 int index = _random.nextInt(legalMoves.size());
-                bestMoveUciFormat = legalMoves.get(index)._uciFormat;
+                bestMoveUciFormat = legalMoves.get(index).uciFormat();
                 MoveWithEval moveWithEval = new MoveWithEval();
                 moveWithEval.eval = -1000.0;
                 moveWithEval.ismate = false;

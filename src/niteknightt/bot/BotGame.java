@@ -134,7 +134,7 @@ public abstract class BotGame implements Runnable {
                 Logger.info("Received game-ending event -- not doing any moves");
                 return;
         }
-
+/*
         // Verify that the moves in the game state match the moves we have recorded.
         List<Move> stateMoves = Move.parseListOfUCIMoves(moves, _board);
 
@@ -150,10 +150,12 @@ public abstract class BotGame implements Runnable {
             Logger.error(Move.printMovesToString("Board moves", _moves));
             setGameState(Enums.GameState.ERROR);
         }
-
+*/
         // Make the challenger's move that is in the game state, if there is one.
-        if (_board.whosTurnToGo() == _challengerColor && stateMoves.size() == _moves.size() + 1) {
-            Move currentMove = stateMoves.get(stateMoves.size() - 1);
+        String moveSRs[] = moves.split(" ");
+        if (_board.whosTurnToGo() == _challengerColor && moveSRs.length == _moves.size() + 1) {
+            Move currentMove = new Move(moveSRs[moveSRs.length - 1], _board);
+            //Move currentMove = stateMoves.get(stateMoves.size() - 1);
             if (!_board._isMoveLegal(currentMove)) {
                 Logger.error("Challenger move is not legal: " + currentMove);
                 setGameState(Enums.GameState.ERROR);
@@ -217,7 +219,7 @@ public abstract class BotGame implements Runnable {
         _moves.add(engineMove);
         ++_numMovesPlayedByEngine;
         try {
-            LichessInterface.makeMove(_gameId, engineMove._uciFormat);
+            LichessInterface.makeMove(_gameId, engineMove.uciFormat());
         }
         catch (LichessApiException e) {
             Logger.error("Caught LichessApiException while sending move to Lichess");
@@ -277,12 +279,16 @@ public abstract class BotGame implements Runnable {
             if (textForChat != null) {
                 LichessInterface.writeChat(_gameId, textForChat);
             }
+        }
+        catch (LichessApiException e) { }
+        try {
             if (doQuitGame) {
                 LichessInterface.resignGame(_gameId);
             }
-            setGameState(newGameState);
         }
         catch (LichessApiException e) { }
+
+        setGameState(newGameState);
     }
 
     public boolean done() {

@@ -12,6 +12,10 @@ public class NotationConverter {
     private int _sourcecol;
     private int _targetrow;
     private int _targetcol;
+    private boolean _isPromotion;
+    private Enums.PieceType _promotionResult;
+    private boolean _isCheck;
+    private boolean _isMate;
 
     public final Enums.Color WHITE = Enums.Color.WHITE;
     public final Enums.Color BLACK = Enums.Color.BLACK;
@@ -139,6 +143,11 @@ public class NotationConverter {
     }
 
     public void handleAlgebraicNotation(String text) {
+        _isPromotion = false;
+        _promotionResult = Enums.PieceType.BLANK;
+        _isCheck = false;
+        _isMate = false;
+
         if (_checkForCastling(text)) {
             return;
         }
@@ -146,13 +155,21 @@ public class NotationConverter {
         int length = text.length();
         int netLength = length; // Length of the text of the actual move, without extra stuff at the end
 
-        if (text.charAt(length - 1) == '+' || text.charAt(length - 1) == '#') {
-            // Check or checkmate
+        if (text.charAt(length - 1) == '+') {
             --netLength;
+            _isCheck = true;
+        }
+        if (text.charAt(length - 1) == '#') {
+            --netLength;
+            _isCheck = true;
+            _isMate = true;
         }
         if (text.charAt(netLength - 2) == '=') {
             // Promotion
             netLength -= 2;
+
+            _isPromotion = true;
+            _promotionResult = Helpers.letterToPieceType(text.charAt(length - 1));
         }
 
         if (netLength == 2) {
@@ -243,4 +260,8 @@ public class NotationConverter {
     public int sourcerow() { return _sourcerow; }
     public int targetcol() { return _targetcol; }
     public int targetrow() { return _targetrow; }
+    public boolean isPromotion() { return _isPromotion; }
+    public Enums.PieceType promotionResult() { return _promotionResult; }
+    public boolean isCheck() { return _isCheck; }
+    public boolean isMate() { return _isMate; }
 }

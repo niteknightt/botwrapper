@@ -32,7 +32,7 @@ public class JustTheBestMoveSelector extends MoveSelector {
         }
 
         if (legalMoves.size() == 1) {
-            bestMoveUciFormat =  legalMoves.get(0)._uciFormat;
+            bestMoveUciFormat =  legalMoves.get(0).uciFormat();
             Logger.debug("Best move for lack of choice: " + bestMoveUciFormat);
         }
         else {
@@ -55,7 +55,7 @@ public class JustTheBestMoveSelector extends MoveSelector {
             }
             if (chooseRandomMove) {
                 int index = _random.nextInt(legalMoves.size());
-                bestMoveUciFormat = legalMoves.get(index)._uciFormat;
+                bestMoveUciFormat = legalMoves.get(index).uciFormat();
                 Logger.debug("Best random move: " + bestMoveUciFormat);
             }
         }

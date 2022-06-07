@@ -20,45 +20,37 @@ public class Pawn extends Piece {
             Position target = new Position(_position.col, _position.row + 1);
             if (_board.isSquareEmpty(target)) {
                 if (target.row != 7) {
-                    potentialMoves.add(new Move(_position, target, _board));
+                    potentialMoves.add(new Move(_position, target, Enums.PieceType.BLANK, _board));
                 }
                 else {
-                    Move move = new Move(_position, target, _board);
-                    move.setPromotionResult(Enums.PieceType.KNIGHT);
+                    Move move = new Move(_position, target, Enums.PieceType.KNIGHT, _board);
                     potentialMoves.add(move);
-                    move = new Move(_position, target, _board);
-                    move.setPromotionResult(Enums.PieceType.BISHOP);
+                    move = new Move(_position, target, Enums.PieceType.BISHOP, _board);
                     potentialMoves.add(move);
-                    move = new Move(_position, target, _board);
-                    move.setPromotionResult(Enums.PieceType.ROOK);
+                    move = new Move(_position, target, Enums.PieceType.ROOK, _board);
                     potentialMoves.add(move);
-                    move = new Move(_position, target, _board);
-                    move.setPromotionResult(Enums.PieceType.QUEEN);
+                    move = new Move(_position, target, Enums.PieceType.QUEEN, _board);
                     potentialMoves.add(move);
                 }
                 target = new Position(_position.col, _position.row + 2);
                 if (_position.row == 1 && _board.isSquareEmpty(target)) {
-                    potentialMoves.add(new Move(_position, target, _board));
+                    potentialMoves.add(new Move(_position, target, Enums.PieceType.BLANK, _board));
                 }
             }
             if (_position.col > 0) {
                 target = new Position(_position.col - 1, _position.row + 1);
                 if (!_board.isSquareEmpty(target) && !_board.isSquarePieceColor(target, _color)) {
                     if (target.row != 7) {
-                        potentialMoves.add(new Move(_position, target, _board));
+                        potentialMoves.add(new Move(_position, target, Enums.PieceType.BLANK, _board));
                     }
                     else {
-                        Move move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.KNIGHT);
+                        Move move = new Move(_position, target, Enums.PieceType.KNIGHT, _board);
                         potentialMoves.add(move);
-                        move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.BISHOP);
+                        move = new Move(_position, target, Enums.PieceType.BISHOP, _board);
                         potentialMoves.add(move);
-                        move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.ROOK);
+                        move = new Move(_position, target, Enums.PieceType.ROOK, _board);
                         potentialMoves.add(move);
-                        move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.QUEEN);
+                        move = new Move(_position, target, Enums.PieceType.QUEEN, _board);
                         potentialMoves.add(move);
                     }
                 }
@@ -66,7 +58,7 @@ public class Pawn extends Piece {
                     if (_board.hasEnPassantTarget()) {
                         Position enPassantTarget = _board.getEnPassantTarget();
                         if (enPassantTarget.equals(target)) {
-                            potentialMoves.add(new Move(_position, target, _board));
+                            potentialMoves.add(new Move(_position, target, Enums.PieceType.BLANK, _board));
                         }
                     }
                 }
@@ -75,20 +67,16 @@ public class Pawn extends Piece {
                 target = new Position(_position.col + 1, _position.row + 1);
                 if (!_board.isSquareEmpty(target) && !_board.isSquarePieceColor(target, _color)) {
                     if (target.row != 7) {
-                        potentialMoves.add(new Move(_position, target, _board));
+                        potentialMoves.add(new Move(_position, target, Enums.PieceType.BLANK, _board));
                     }
                     else {
-                        Move move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.KNIGHT);
+                        Move move = new Move(_position, target, Enums.PieceType.KNIGHT, _board);
                         potentialMoves.add(move);
-                        move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.BISHOP);
+                        move = new Move(_position, target, Enums.PieceType.BISHOP, _board);
                         potentialMoves.add(move);
-                        move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.ROOK);
+                        move = new Move(_position, target, Enums.PieceType.ROOK, _board);
                         potentialMoves.add(move);
-                        move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.QUEEN);
+                        move = new Move(_position, target, Enums.PieceType.QUEEN, _board);
                         potentialMoves.add(move);
                     }
                 }
@@ -96,7 +84,7 @@ public class Pawn extends Piece {
                     if (_board.hasEnPassantTarget()) {
                         Position enPassantTarget = _board.getEnPassantTarget();
                         if (enPassantTarget.equals(target)) {
-                            potentialMoves.add(new Move(_position, target, _board));
+                            potentialMoves.add(new Move(_position, target, Enums.PieceType.BLANK, _board));
                         }
                     }
                 }
@@ -106,45 +94,37 @@ public class Pawn extends Piece {
             Position target = new Position(_position.col, _position.row - 1);
             if (_board.isSquareEmpty(target)) {
                 if (target.row != 0) {
-                    potentialMoves.add(new Move(_position, target, _board));
+                    potentialMoves.add(new Move(_position, target, Enums.PieceType.BLANK, _board));
                 }
                 else {
-                    Move move = new Move(_position, target, _board);
-                    move.setPromotionResult(Enums.PieceType.KNIGHT);
+                    Move move = new Move(_position, target, Enums.PieceType.KNIGHT, _board);
                     potentialMoves.add(move);
-                    move = new Move(_position, target, _board);
-                    move.setPromotionResult(Enums.PieceType.BISHOP);
+                    move = new Move(_position, target, Enums.PieceType.BISHOP, _board);
                     potentialMoves.add(move);
-                    move = new Move(_position, target, _board);
-                    move.setPromotionResult(Enums.PieceType.ROOK);
+                    move = new Move(_position, target, Enums.PieceType.ROOK, _board);
                     potentialMoves.add(move);
-                    move = new Move(_position, target, _board);
-                    move.setPromotionResult(Enums.PieceType.QUEEN);
+                    move = new Move(_position, target, Enums.PieceType.QUEEN, _board);
                     potentialMoves.add(move);
                 }
                 target = new Position(_position.col, _position.row - 2);
                 if (_position.row == 6 && _board.isSquareEmpty(target)) {
-                    potentialMoves.add(new Move(_position, target, _board));
+                    potentialMoves.add(new Move(_position, target, Enums.PieceType.BLANK, _board));
                 }
             }
             if (_position.col > 0) {
                 target = new Position(_position.col - 1, _position.row - 1);
                 if (!_board.isSquareEmpty(target) && !_board.isSquarePieceColor(target, _color)) {
                     if (target.row != 0) {
-                        potentialMoves.add(new Move(_position, target, _board));
+                        potentialMoves.add(new Move(_position, target, Enums.PieceType.BLANK, _board));
                     }
                     else {
-                        Move move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.KNIGHT);
+                        Move move = new Move(_position, target, Enums.PieceType.KNIGHT, _board);
                         potentialMoves.add(move);
-                        move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.BISHOP);
+                        move = new Move(_position, target, Enums.PieceType.BISHOP, _board);
                         potentialMoves.add(move);
-                        move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.ROOK);
+                        move = new Move(_position, target, Enums.PieceType.ROOK, _board);
                         potentialMoves.add(move);
-                        move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.QUEEN);
+                        move = new Move(_position, target, Enums.PieceType.QUEEN, _board);
                         potentialMoves.add(move);
                     }
                 }
@@ -152,7 +132,7 @@ public class Pawn extends Piece {
                     if (_board.hasEnPassantTarget()) {
                         Position enPassantTarget = _board.getEnPassantTarget();
                         if (enPassantTarget.equals(target)) {
-                            potentialMoves.add(new Move(_position, target, _board));
+                            potentialMoves.add(new Move(_position, target, Enums.PieceType.BLANK, _board));
                         }
                     }
                 }
@@ -161,20 +141,16 @@ public class Pawn extends Piece {
                 target = new Position(_position.col + 1, _position.row - 1);
                 if (!_board.isSquareEmpty(target) && !_board.isSquarePieceColor(target, _color)) {
                     if (target.row != 0) {
-                        potentialMoves.add(new Move(_position, target, _board));
+                        potentialMoves.add(new Move(_position, target, Enums.PieceType.BLANK, _board));
                     }
                     else {
-                        Move move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.KNIGHT);
+                        Move move = new Move(_position, target, Enums.PieceType.KNIGHT, _board);
                         potentialMoves.add(move);
-                        move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.BISHOP);
+                        move = new Move(_position, target, Enums.PieceType.BISHOP, _board);
                         potentialMoves.add(move);
-                        move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.ROOK);
+                        move = new Move(_position, target, Enums.PieceType.ROOK, _board);
                         potentialMoves.add(move);
-                        move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.QUEEN);
+                        move = new Move(_position, target, Enums.PieceType.QUEEN, _board);
                         potentialMoves.add(move);
                     }
                 }
@@ -182,7 +158,7 @@ public class Pawn extends Piece {
                     if (_board.hasEnPassantTarget()) {
                         Position enPassantTarget = _board.getEnPassantTarget();
                         if (enPassantTarget.equals(target)) {
-                            potentialMoves.add(new Move(_position, target, _board));
+                            potentialMoves.add(new Move(_position, target, Enums.PieceType.BLANK, _board));
                         }
                     }
                 }
@@ -202,20 +178,19 @@ public class Pawn extends Piece {
             Position target = new Position(_position.col, _position.row + 1);
             if (_board.isSquareEmpty(target)) {
                 if (target.row != 7) {
-                    if (_board.testMoveForLegality(new Move(_position, target, _board))) {
+                    if (_board.testMoveForLegality(new Move(_position, target, Enums.PieceType.BLANK, _board))) {
                         return true;
                     }
                 }
                 else {
-                    Move move = new Move(_position, target, _board);
-                    move.setPromotionResult(Enums.PieceType.KNIGHT);
+                    Move move = new Move(_position, target, Enums.PieceType.KNIGHT, _board);
                     if (_board.testMoveForLegality(move)) {
                         return true;
                     }
                 }
                 target = new Position(_position.col, _position.row + 2);
                 if (_position.row == 1 && _board.isSquareEmpty(target)) {
-                    if (_board.testMoveForLegality(new Move(_position, target, _board))) {
+                    if (_board.testMoveForLegality(new Move(_position, target, Enums.PieceType.BLANK, _board))) {
                         return true;
                     }
                 }
@@ -224,13 +199,12 @@ public class Pawn extends Piece {
                 target = new Position(_position.col - 1, _position.row + 1);
                 if (!_board.isSquareEmpty(target) && !_board.isSquarePieceColor(target, _color)) {
                     if (target.row != 7) {
-                        if (_board.testMoveForLegality(new Move(_position, target, _board))) {
+                        if (_board.testMoveForLegality(new Move(_position, target, Enums.PieceType.BLANK, _board))) {
                             return true;
                         }
                     }
                     else {
-                        Move move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.KNIGHT);
+                        Move move = new Move(_position, target, Enums.PieceType.KNIGHT, _board);
                         if (_board.testMoveForLegality(move)) {
                             return true;
                         }
@@ -240,7 +214,7 @@ public class Pawn extends Piece {
                     if (_board.hasEnPassantTarget()) {
                         Position enPassantTarget = _board.getEnPassantTarget();
                         if (enPassantTarget.equals(target)) {
-                            if (_board.testMoveForLegality(new Move(_position, target, _board))) {
+                            if (_board.testMoveForLegality(new Move(_position, target, Enums.PieceType.BLANK, _board))) {
                                 return true;
                             }
                         }
@@ -251,13 +225,12 @@ public class Pawn extends Piece {
                 target = new Position(_position.col + 1, _position.row + 1);
                 if (!_board.isSquareEmpty(target) && !_board.isSquarePieceColor(target, _color)) {
                     if (target.row != 7) {
-                        if (_board.testMoveForLegality(new Move(_position, target, _board))) {
+                        if (_board.testMoveForLegality(new Move(_position, target, Enums.PieceType.BLANK, _board))) {
                             return true;
                         }
                     }
                     else {
-                        Move move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.KNIGHT);
+                        Move move = new Move(_position, target, Enums.PieceType.KNIGHT, _board);
                         if (_board.testMoveForLegality(move)) {
                             return true;
                         }
@@ -267,7 +240,7 @@ public class Pawn extends Piece {
                     if (_board.hasEnPassantTarget()) {
                         Position enPassantTarget = _board.getEnPassantTarget();
                         if (enPassantTarget.equals(target)) {
-                            if (_board.testMoveForLegality(new Move(_position, target, _board))) {
+                            if (_board.testMoveForLegality(new Move(_position, target, Enums.PieceType.BLANK, _board))) {
                                 return true;
                             }
                         }
@@ -279,20 +252,19 @@ public class Pawn extends Piece {
             Position target = new Position(_position.col, _position.row - 1);
             if (_board.isSquareEmpty(target)) {
                 if (target.row != 0) {
-                    if (_board.testMoveForLegality(new Move(_position, target, _board))) {
+                    if (_board.testMoveForLegality(new Move(_position, target, Enums.PieceType.BLANK, _board))) {
                         return true;
                     }
                 }
                 else {
-                    Move move = new Move(_position, target, _board);
-                    move.setPromotionResult(Enums.PieceType.KNIGHT);
+                    Move move = new Move(_position, target, Enums.PieceType.KNIGHT, _board);
                     if (_board.testMoveForLegality(move)) {
                         return true;
                     }
                 }
                 target = new Position(_position.col, _position.row - 2);
                 if (_position.row == 6 && _board.isSquareEmpty(target)) {
-                    if (_board.testMoveForLegality(new Move(_position, target, _board))) {
+                    if (_board.testMoveForLegality(new Move(_position, target, Enums.PieceType.BLANK, _board))) {
                         return true;
                     }
                 }
@@ -301,13 +273,12 @@ public class Pawn extends Piece {
                 target = new Position(_position.col - 1, _position.row - 1);
                 if (!_board.isSquareEmpty(target) && !_board.isSquarePieceColor(target, _color)) {
                     if (target.row != 0) {
-                        if (_board.testMoveForLegality(new Move(_position, target, _board))) {
+                        if (_board.testMoveForLegality(new Move(_position, target, Enums.PieceType.BLANK, _board))) {
                             return true;
                         }
                     }
                     else {
-                        Move move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.KNIGHT);
+                        Move move = new Move(_position, target, Enums.PieceType.KNIGHT, _board);
                         if (_board.testMoveForLegality(move)) {
                             return true;
                         }
@@ -317,7 +288,7 @@ public class Pawn extends Piece {
                     if (_board.hasEnPassantTarget()) {
                         Position enPassantTarget = _board.getEnPassantTarget();
                         if (enPassantTarget.equals(target)) {
-                            if (_board.testMoveForLegality(new Move(_position, target, _board))) {
+                            if (_board.testMoveForLegality(new Move(_position, target, Enums.PieceType.BLANK, _board))) {
                                 return true;
                             }
                         }
@@ -328,13 +299,12 @@ public class Pawn extends Piece {
                 target = new Position(_position.col + 1, _position.row - 1);
                 if (!_board.isSquareEmpty(target) && !_board.isSquarePieceColor(target, _color)) {
                     if (target.row != 0) {
-                        if (_board.testMoveForLegality(new Move(_position, target, _board))) {
+                        if (_board.testMoveForLegality(new Move(_position, target, Enums.PieceType.BLANK, _board))) {
                             return true;
                         }
                     }
                     else {
-                        Move move = new Move(_position, target, _board);
-                        move.setPromotionResult(Enums.PieceType.KNIGHT);
+                        Move move = new Move(_position, target, Enums.PieceType.KNIGHT, _board);
                         if (_board.testMoveForLegality(move)) {
                             return true;
                         }
@@ -344,7 +314,7 @@ public class Pawn extends Piece {
                     if (_board.hasEnPassantTarget()) {
                         Position enPassantTarget = _board.getEnPassantTarget();
                         if (enPassantTarget.equals(target)) {
-                            if (_board.testMoveForLegality(new Move(_position, target, _board))) {
+                            if (_board.testMoveForLegality(new Move(_position, target, Enums.PieceType.BLANK, _board))) {
                                 return true;
                             }
                         }

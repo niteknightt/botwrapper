@@ -14,7 +14,24 @@ import niteknightt.gameplay.NotationConverter;
 public class MainTests {
     
     @Test
-    void gameThatFailedToFindEnPassant(){
+    void createBoard() {
+        Board board = new Board();
+    }
+
+    @Test
+    void setupBoardStartingPosition() {
+        Board board = new Board();
+        board.setupStartingPosition();
+    }
+
+    @Test
+    void setupBoardMiddleGamePosition() {
+        Board board = new Board();
+        board.setupFromFen("r1b2rk1/ppp2ppp/1bnq4/3P4/2B5/2P2N2/P4PPP/R1BQ1RK1 b - - 0 12");
+    }
+
+    @Test
+    void playGame(){
         Board board = new Board();
         board.setupStartingPosition();
         assertTrue(board.handleMoveForGame(new Move("d2d4", board)));
@@ -103,73 +120,6 @@ public class MainTests {
         }
 
         assertTrue(foundExpectedMove);
-    }
-
-    @Test
-    void gameThatFailedToFindAnyMove(){
-        Board board = new Board();
-        board.setupStartingPosition();
-        assertTrue(board.handleMoveForGame(new Move("d2d4", board)));
-        assertTrue(board.handleMoveForGame(new Move("g8f6", board)));
-        assertTrue(board.handleMoveForGame(new Move("c2c4", board)));
-        assertTrue(board.handleMoveForGame(new Move("g7g6", board)));
-        assertTrue(board.handleMoveForGame(new Move("c1g5", board)));
-        assertTrue(board.handleMoveForGame(new Move("f6e4", board)));
-        assertTrue(board.handleMoveForGame(new Move("g5f4", board)));
-        assertTrue(board.handleMoveForGame(new Move("c7c5", board)));
-        assertTrue(board.handleMoveForGame(new Move("d1c2", board)));
-        assertTrue(board.handleMoveForGame(new Move("f7f5", board)));
-        assertTrue(board.handleMoveForGame(new Move("f2f3", board)));
-        assertTrue(board.handleMoveForGame(new Move("d8a5", board)));
-        assertTrue(board.handleMoveForGame(new Move("b1d2", board)));
-        assertTrue(board.handleMoveForGame(new Move("e4f6", board)));
-        assertTrue(board.handleMoveForGame(new Move("d4d5", board)));
-        assertTrue(board.handleMoveForGame(new Move("d7d6", board)));
-        assertTrue(board.handleMoveForGame(new Move("e2e3", board)));
-        assertTrue(board.handleMoveForGame(new Move("f8g7", board)));
-        assertTrue(board.handleMoveForGame(new Move("g1h3", board)));
-        assertTrue(board.handleMoveForGame(new Move("b7b5", board)));
-        assertTrue(board.handleMoveForGame(new Move("c4b5", board)));
-        assertTrue(board.handleMoveForGame(new Move("b8d7", board)));
-        assertTrue(board.handleMoveForGame(new Move("f1c4", board)));
-        assertTrue(board.handleMoveForGame(new Move("d7b6", board)));
-        assertTrue(board.handleMoveForGame(new Move("e1g1", board)));
-        assertTrue(board.handleMoveForGame(new Move("f6d5", board)));
-        assertTrue(board.handleMoveForGame(new Move("a2a4", board)));
-        assertTrue(board.handleMoveForGame(new Move("b6c4", board)));
-        assertTrue(board.handleMoveForGame(new Move("d2c4", board)));
-        assertTrue(board.handleMoveForGame(new Move("a5b4", board)));
-        assertTrue(board.handleMoveForGame(new Move("a1c1", board)));
-        assertTrue(board.handleMoveForGame(new Move("c8e6", board)));
-        assertTrue(board.handleMoveForGame(new Move("b2b3", board)));
-        assertTrue(board.handleMoveForGame(new Move("a7a6", board)));
-        assertTrue(board.handleMoveForGame(new Move("e3e4", board)));
-        assertTrue(board.handleMoveForGame(new Move("d5c3", board)));
-        assertTrue(board.handleMoveForGame(new Move("b5b6", board)));
-        assertTrue(board.handleMoveForGame(new Move("e6c4", board)));
-        assertTrue(board.handleMoveForGame(new Move("b3c4", board)));
-        assertTrue(board.handleMoveForGame(new Move("b4c4", board)));
-        assertTrue(board.handleMoveForGame(new Move("g1h1", board)));
-        assertTrue(board.handleMoveForGame(new Move("c4a4", board)));
-        assertTrue(board.handleMoveForGame(new Move("c2d2", board)));
-        assertTrue(board.handleMoveForGame(new Move("a4d4", board)));
-        assertTrue(board.handleMoveForGame(new Move("d2e1", board)));
-        assertTrue(board.handleMoveForGame(new Move("f5e4", board)));
-        assertTrue(board.handleMoveForGame(new Move("h3g5", board)));
-        assertTrue(board.handleMoveForGame(new Move("e8d7", board)));
-        assertTrue(board.handleMoveForGame(new Move("c1c3", board)));
-        assertTrue(!board.getLegalMoves().isEmpty());
-        System.out.println("Done");
-    }
-
-    @Test
-    void gameThatSaidFenDidNotMatch(){
-        Board board = new Board();
-        board.setupFromFen("8/3r2p1/R5k1/5p2/5BP1/8/5K2/8 b - - 1 168");
-        assertEquals("8/3r2p1/R5k1/5p2/5BP1/8/5K2/8 b - - 1 168", board.getFen());
-        Move move = new Move("d7d6", board);
-        assertTrue(board.handleMoveForGame(move));
-        System.out.println("Done");
     }
 
     @Test

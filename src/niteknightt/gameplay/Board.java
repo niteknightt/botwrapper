@@ -2,7 +2,7 @@ package niteknightt.gameplay;
 import java.util.*;
 
 import niteknightt.bot.Logger;
-import niteknightt.gameplay.Enums.PieceType;
+import niteknightt.gameplay.Enums.Color;
 
 
 public class Board {
@@ -35,7 +35,6 @@ public class Board {
 
         _pieces.clear();
         _gameHistory.clear();
-        _gameHistory.addStartupFen(fen);
         
         Piece.CreateBlankPiece(this); // TODO: This should not be necessary -- the Piece class should automatically create the BlankPiece object.
         _pieces.clear();
@@ -299,6 +298,20 @@ public class Board {
         return result;
     }
 
+    public CheckCheckmateStalemate testMoveForCheckCheckmateStalemate(Move move) {
+        CheckCheckmateStalemate result = new CheckCheckmateStalemate();
+
+        _handleMove(move);
+
+        result.check = this.isCheck();
+        result.checkmate = this.isCheckmate();
+        result.stalemate = this.isStalemate();
+
+        _undoMove(move);
+    
+        return result;
+    }
+
     public Piece pieceAt(Position position) {
         return _pieces.get(Position.internalToIndex(position));
     }
@@ -482,6 +495,10 @@ public class Board {
         throw new RuntimeException("Failed to find king of color " + color.toString());
     }
     protected void _handleMove(Move move) {
+        MoveProperties moveProps = new MoveProperties();
+        moveProps.setMove(move);
+        moveProps.setFenBefore(_fen);
+
         Position startPos = move.source();
         Position endPos = move.target();
         int startIndex = Position.internalToIndex(startPos);
@@ -489,14 +506,14 @@ public class Board {
     
         Piece movedPiece = _pieces.get(startIndex);
     
-        move.setRuinedCastling(Enums.CastleSide.KINGSIDE, false);
-        move.setRuinedCastling(Enums.CastleSide.QUEENSIDE, false);
+        moveProps.setRuinedCastling(Enums.CastleSide.KINGSIDE, false);
+        moveProps.setRuinedCastling(Enums.CastleSide.QUEENSIDE, false);
     
         if (move.isCastle() || move.pieceType() == Enums.PieceType.KING) {
             for (int i = 0; i < 2; ++i) {
                 if (castlingRights(move.color(), Enums.CastleSide.values()[i])) {
                     setCastlingRights(move.color(), Enums.CastleSide.values()[i], false);
-                    move.setRuinedCastling(Enums.CastleSide.values()[i], true);
+                    moveProps.setRuinedCastling(Enums.CastleSide.values()[i], true);
                 }
             }
         }
@@ -506,14 +523,14 @@ public class Board {
                 Enums.CastleSide castleSide = (move.source().col == 0 ? Enums.CastleSide.QUEENSIDE : Enums.CastleSide.KINGSIDE);
                 if (castlingRights(move.color(), castleSide)) {
                     setCastlingRights(move.color(), castleSide, false);
-                    move.setRuinedCastling(castleSide, true);
+                    moveProps.setRuinedCastling(castleSide, true);
                 }
             }
         }
     
         if (_hasEnPassantTarget) {
-            move.setRuinedEnPassant(true);
-            move.setRuinedEnPassantTarget(_enPassantTarget);
+            moveProps.setRuinedEnPassant(true);
+            moveProps.setRuinedEnPassantTarget(_enPassantTarget);
         }
     
         _hasEnPassantTarget = false;
@@ -524,29 +541,35 @@ public class Board {
             if (Math.abs(endPos.row - startPos.row) == 2) {
                 _hasEnPassantTarget = true;
                 _enPassantTarget = new Position(endPos.col, (startPos.row == 1 ? startPos.row + 1 : startPos.row - 1));
-                move.setEnabledEnPassant(true);
-                move.setEnabledEnPassantTarget(_enPassantTarget);
+                moveProps.setEnabledEnPassant(true);
+                moveProps.setEnabledEnPassantTarget(_enPassantTarget);
             }
         }
     
         _prevHalfMoveClock = _halfMoveClock;
+        moveProps.setHalfMoveClockBefore(_halfMoveClock);
     
+        moveProps.setIsCapture(false);
         if (pawnMove || move.isCapture()) {
             _halfMoveClock = 0;
+            moveProps.setIsCapture(true);
+            moveProps.setHalfMoveClockAfter(0);
+            moveProps.setPieceTypeCaptured(_pieces.get(endIndex).pieceType());
         }
-    
+        else {
+            moveProps.setHalfMoveClockAfter(_halfMoveClock + 1);
+        }
+
+        moveProps.setFullMoveNumberBefore(_fullMoveNumber);
         if (_whosTurnToGo == Enums.Color.BLACK) {
             ++_fullMoveNumber;
         }
+        moveProps.setFullMoveNumberAfter(_fullMoveNumber);
         
         _whosTurnToGo = Enums.Color.oppositeColor(_whosTurnToGo);
     
         if (move.isPromotion()) {
-            if (move.isCapture()) {
-                _gameHistory.addCapturedPiece(_pieces.get(endIndex));
-            }
             _pieces.set(endIndex, Piece.createPiece(move.promotionResult(), movedPiece.color(), endPos.col, endPos.row, this));
-            _gameHistory.addPromotedPawn(_pieces.get(startIndex));
             _pieces.set(startIndex, Piece.GetBlankPiece());
         }
         else if (move.isCastle()) {
@@ -573,12 +596,8 @@ public class Board {
             _pieces.get(Position.internalToIndex(rookEndPos)).setPosition(rookEndPos.col, rookEndPos.row);
         }
         else {
-            if (move.isCapture()) {
-                _gameHistory.addCapturedPiece(_pieces.get(endIndex));
-            }
-            else if (move.isEnPassant()) {
+            if (move.isEnPassant()) {
                 Position enPassantPawnActualPos = new Position(_enPassantTarget.col, (move.color() == Enums.Color.WHITE ? _enPassantTarget.row - 1 : _enPassantTarget.row + 1));
-                _gameHistory.addCapturedPiece(_pieces.get(Position.internalToIndex(enPassantPawnActualPos)));
                 _pieces.set(Position.internalToIndex(enPassantPawnActualPos), Piece.GetBlankPiece());
             }
             _pieces.set(endIndex, _pieces.get(startIndex));
@@ -590,63 +609,26 @@ public class Board {
     
         _calculateFen();
 //        Logger.info("Handled move: " + move.algebraicFormat() + " FEN: " + _fen);
-    
-        _gameHistory.addMove(move, _fen);
+        moveProps.setFenAfter(_fen);
+
+        _gameHistory.addMoveProperties(moveProps);
     }
 
     protected void _undoMove(Move move) {
         if (_gameHistory.isEmpty()) {
-            //MAINLOG("ERROR: Attempt to undo move when hisory is empty");
             throw new RuntimeException("ERROR: Attempt to undo move when hisory is empty");
         }
     
-        Move lastMove = _gameHistory.lastMove();
-    
+        MoveProperties lastMoveProps = _gameHistory.lastMoveProperties();
+        Move lastMove = lastMoveProps.move();
+
         if (!lastMove.equals(move)) {
-            //MAINLOG("ERROR: Last move " << lastmove.algebraicFormat() << " does not match undo move " << move.algebraicFormat());
             throw new RuntimeException("ERROR: Last move does not match undo move");
         }
-    
-        Piece lastCapturedPiece = Piece.GetBlankPiece(); // TODO: Not sure if this will work.
-        if (lastMove.isCapture() || lastMove.isEnPassant()) {
-            if (!_gameHistory.hasLastCapturedPiece()) {
-                //MAINLOG("ERROR: No last captured piece but last move was a capture");
-                throw new RuntimeException("ERROR: No last captured piece but last move was a capture");
-            }
-            lastCapturedPiece = _gameHistory.lastCapturedPiece();
-        }
-        else {
-            lastCapturedPiece = Piece.GetBlankPiece();
-        }
-        Piece lastPromotedPawn = Piece.GetBlankPiece(); // TODO: Not sure if this will work.
-        if (lastMove.isPromotion()) {
-            if (!_gameHistory.hasLastPromotedPawn()) {
-                //MAINLOG("ERROR: No last promoted pawn but last move was a promotion");
-                throw new RuntimeException("ERROR: No last promoted pawn but last move was a promotion");
-            }
-            lastPromotedPawn = _gameHistory.lastPromotedPawn();
-        }
-        else {
-            lastPromotedPawn = Piece.GetBlankPiece();
-        }
-    
-        _gameHistory.undoLastMove();
-    
+
         if (_gameHistory.isEmpty()) {
-            //MAINLOG("ERROR: History is empty after undoing last move");
             throw new RuntimeException("ERROR: History is empty after undoing last move");
         }
-    
-        if (!_gameHistory.hasLastFen()) {
-            //MAINLOG("ERROR: Attempt to get last FEN from history returned false after deleting previous move");
-            throw new RuntimeException("ERROR: Attempt to get last FEN from history returned false after deleting previous move");
-        }
-    
-        String lastFen = _gameHistory.lastFen();
-    
-        //MAINLOG("Undoing move " << lastmove.algebraicFormat())
-    
-        _calculateFen();
     
         Position startPos = lastMove.source();
         Position endPos = lastMove.target();
@@ -654,9 +636,9 @@ public class Board {
         int endIndex = Position.internalToIndex(endPos);
     
         if (lastMove.isPromotion()) {
-            _pieces.set(startIndex, lastPromotedPawn);
+            _pieces.set(startIndex, Piece.createPiece(Enums.PieceType.PAWN, move.color(), move.source().col, move.source().row, this));
             if (lastMove.isCapture()) {
-                _pieces.set(endIndex, lastCapturedPiece);
+                _pieces.set(endIndex, Piece.createPiece(move.pieceTypeCaptured(), Color.oppositeColor(move.color()), move.target().col, move.target().row, this));
             }
             else {
                 _pieces.set(endIndex, Piece.GetBlankPiece());
@@ -688,13 +670,13 @@ public class Board {
         else if (lastMove.isCapture()) {
             _pieces.set(startIndex, _pieces.get(endIndex));
             _pieces.get(startIndex).setPosition(startPos.col, startPos.row);
-            _pieces.set(endIndex, lastCapturedPiece);
+            _pieces.set(endIndex, Piece.createPiece(move.pieceTypeCaptured(), Color.oppositeColor(move.color()), move.target().col, move.target().row, this));
         }
         else if (lastMove.isEnPassant()) {
             _pieces.set(startIndex, _pieces.get(endIndex));
             _pieces.get(startIndex).setPosition(startPos.col, startPos.row);
             Position locationOfCapturedPawn = new Position(endPos.col, (lastMove.color() == Enums.Color.WHITE ? endPos.row - 1 : endPos.row + 1));
-            _pieces.set(Position.internalToIndex(locationOfCapturedPawn), lastCapturedPiece);
+            _pieces.set(Position.internalToIndex(locationOfCapturedPawn), Piece.createPiece(Enums.PieceType.PAWN, Color.oppositeColor(move.color()), locationOfCapturedPawn.col, locationOfCapturedPawn.row, this));
             _pieces.set(endIndex, Piece.GetBlankPiece());
         }
         else {
@@ -703,13 +685,13 @@ public class Board {
             _pieces.set(endIndex, Piece.GetBlankPiece());
         }
     
-        if (lastMove.enabledEnPassant()) {
+        if (lastMoveProps.enabledEnPassant()) {
             _hasEnPassantTarget = false;
             _enPassantTarget = new Position(0, 0);
         }
-        if (lastMove.ruinedEnPassant()) {
+        if (lastMoveProps.ruinedEnPassant()) {
             _hasEnPassantTarget = true;
-            _enPassantTarget = lastMove.ruinedEnPassantTarget();
+            _enPassantTarget = lastMoveProps.ruinedEnPassantTarget();
         }
     
         if (lastMove.color() == Enums.Color.BLACK) {
@@ -717,20 +699,19 @@ public class Board {
         }
     
         _whosTurnToGo = lastMove.color();
-        _halfMoveClock = _prevHalfMoveClock; // TODO: This won't work. Need to add halfMoveClock to Move object like the other items that are undone.
+        _halfMoveClock = lastMoveProps.halfMoveClockBefore();
     
         for (int i = 0; i < 2; ++i) {
-            if (lastMove.ruinedCastling(i)) {
+            if (lastMoveProps.ruinedCastling(i)) {
                 setCastlingRights(lastMove.color(), Enums.CastleSide.values()[i], true);
             }
         }
     
         _calculateFen();
-        //MAINLOG("FEN: " << _fen)
     
-        if (!_fen.equals(lastFen)) {
+        if (!_fen.equals(lastMoveProps.fenBefore())) {
             Logger.error("Fen does not match after undo");
-            Logger.error("Expected fen: " + lastFen);
+            Logger.error("Expected fen: " + lastMoveProps.fenBefore());
             Logger.error("Fen after undo: " + _fen);
             Logger.error("Move was " + lastMove.algebraicFormat());
 
@@ -738,6 +719,8 @@ public class Board {
         }
     
         _isCheck = _scanForCheck();    
+
+        _gameHistory.undoLastMove();
     }
 
     protected boolean _scanForCheck() {

@@ -10,35 +10,22 @@ public class Move {
 
     }
 
-    public Move(Position source, Position target, Board board) {
+    public Move(Position source, Position target, PieceType promotionResult, Board board) {
         _board = board;
         _source = new Position(source.col, source.row);
         _target = new Position(target.col, target.row);
-        _promotionResult = Enums.PieceType.BLANK;
-        _ruinedEnPassant = false;
-        _enabledEnPassant = false;
-        _calculateUciFormat();
-        _findColor();
-        _findPieceType();
-        _calculateIsCapture();
-        _calculateIsPromotion();
-        _calculateIsCastle();
-        _calculateIsEnPassant();
-        _calculateAlgebraicFormat();
+        _promotionResult = promotionResult;
+        _isPromotion = (promotionResult != PieceType.BLANK);
+        _init();
     }
 
-    public Move(String uciFormat, Board board) {
+//    public Move(Position source, Position target, Board board) {
+//        this(source, target, PieceType.BLANK, board);
+//    }
+
+    public Move(String moveText, Board board) {
         _board = board;
-        _uciFormat = uciFormat;
-        _ruinedEnPassant = false;
-        _enabledEnPassant = false;
-        _calculateInternalValuesWithUci();
-        _findColor();
-        _findPieceType();
-        _calculateIsCapture();
-        _calculateIsCastle();
-        _calculateIsEnPassant();
-        _calculateAlgebraicFormat();
+        _init(moveText);
     }
         
     public Position source() { return _source; }
@@ -51,44 +38,73 @@ public class Move {
     public Enums.PieceType promotionResult() { return _promotionResult; }
     public boolean isCastle() { return _isCastle; }
     public boolean isEnPassant() { return _isEnPassant; }
-    public void setRuinedEnPassant(boolean val) { _ruinedEnPassant = val; }
-    public void setRuinedEnPassantTarget(Position pos) { _ruinedEnPassantTarget = pos; }
-    public void setEnabledEnPassant(boolean val) { _enabledEnPassant = val; }
-    public void setEnabledEnPassantTarget(Position pos) { _enabledEnPassantTarget = pos; }
     public Enums.CastleSide castleSide() { return _castleSide; }
-    public String uciFormat() { return _uciFormat; }
-    public String algebraicFormat() { return _algebraicFormat; }
-    public boolean ruinedCastling(int index) { return _ruinedCastling[index]; }
-    public boolean ruinedEnPassant() { return _ruinedEnPassant; }
-    public Position ruinedEnPassantTarget() { return _ruinedEnPassantTarget; }
-    public boolean enabledEnPassant() { return _enabledEnPassant; }
-    public Position enabledEnPassantTarget() { return _enabledEnPassantTarget; }
+    public boolean isCheck() { return _isCheck; }
+    public boolean isMate() { return _isMate; }
+    //public boolean isStalemate() { return _isStalemate; }
 
-    protected void _init(String text, Board board) {
-        if (_isTextUciFormat(text)) {
-            _initFromUci(text, board);
+    public String uciFormat() {
+        if (_uciFormat == null || _uciFormat.trim().isEmpty()) {
+            _calculateUciFormat();
+        }
+        return _uciFormat;
+    }
+
+    public String algebraicFormat() {
+        if (_algebraicFormat == null || _algebraicFormat.trim().isEmpty()) {
+            _calculateAlgebraicFormat();
+        }
+        return _algebraicFormat;
+    }
+
+    protected void _init() {
+        _init("");
+    }
+
+    protected void _init(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            _initFromPosition();
+        }
+        else if (_isTextUciFormat(text)) {
+            _initFromUci(text);
         }
         else {
-            _initFromAlgebraic(text, board);
+            _initFromAlgebraic(text);
         }
     }
 
-    protected void _initFromUci(String uciFormat, Board board) {
-        _board = board;
-        _uciFormat = uciFormat;
-        _ruinedEnPassant = false;
-        _enabledEnPassant = false;
-        _calculateInternalValuesWithUci();
+    protected void _calculateRemainingInternalItems() {
         _findColor();
         _findPieceType();
-        _calculateIsCapture();
-        _calculateIsCastle();
+        _calculateIsCaptureAndPieceTypeCaptured();
+        _calculateIsCastleAndCastleSide();
         _calculateIsEnPassant();
-        _calculateAlgebraicFormat();
     }
 
-    protected void _initFromAlgebraic(String algebraicFormat, Board board) {
+    protected void _initFromPosition() {
+        _calculateSourceAndTargetFromPosition();
+        _calculateRemainingInternalItems();
+        if ((_board.isSquareEmpty(_target) || !_board.isSquarePieceColor(_target, _color)) && _board.testMoveForLegality(this)) {
+            _calculateOtherInfoFromPosition();
+        }
+    }
 
+    protected void _initFromUci(String uciFormat) {
+        _uciFormat = uciFormat;
+        _calculateSourceAndTargetFromUci();
+        _calculateRemainingInternalItems();
+        if ((_board.isSquareEmpty(_target) || !_board.isSquarePieceColor(_target, _color)) && _board.testMoveForLegality(this)) {
+            _calculateOtherInfoFromUci();
+        }
+    }
+
+    protected void _initFromAlgebraic(String algebraicFormat) {
+        _algebraicFormat = algebraicFormat;
+        _calculateSourceAndTargetFromAlgebraic();
+        _calculateRemainingInternalItems();
+        if ((_board.isSquareEmpty(_target) || !_board.isSquarePieceColor(_target, _color)) && _board.testMoveForLegality(this)) {
+            _calculateOtherInfoFromAlgebraic();
+        }
     }
 
     protected boolean _isTextUciFormat(String text) {
@@ -109,19 +125,6 @@ public class Move {
 
         return false;
     }
-
-    void setPromotionResult(Enums.PieceType val) {
-        if (!_isPromotion) {
-            //MAINLOG("ERROR: Setting promotion result for move that is not promotion: " << _algebraicFormat)
-            throw new RuntimeException("ERROR: Setting promotion result for move that is not promotion");
-        }
-    
-        _promotionResult = val;
-        _calculateUciFormat();
-        _calculateAlgebraicFormat();
-    }
-
-    void setRuinedCastling(Enums.CastleSide castleSide, boolean val) { _ruinedCastling[castleSide.getValue()] = val; }
 
     @Override
     public boolean equals(Object other) {
@@ -145,18 +148,14 @@ public class Move {
         _pieceType = _board.pieceAt(_source).pieceType();
     }
 
-    protected void _calculateIsCapture() {
+    protected void _calculateIsCaptureAndPieceTypeCaptured() {
         _isCapture = (!_board.pieceAt(_target).isBlankPiece() && _board.pieceAt(_target).color() != _board.pieceAt(_source).color());
         if (_isCapture) {
             _pieceTypeCaptured = _board.pieceAt(_target).pieceType();
         }
     }
 
-    protected void _calculateIsPromotion() {
-        _isPromotion = (_pieceType == Enums.PieceType.PAWN && (_target.row == 0 || _target.row == 7));
-    }
-
-    protected void _calculateIsCastle() {
+    protected void _calculateIsCastleAndCastleSide() {
         _isCastle = (_pieceType == Enums.PieceType.KING && _source.row == _target.row && Math.abs(_source.col - _target.col) > 1);
         if (_isCastle) {
             _castleSide = (_target.col == 6 ? Enums.CastleSide.KINGSIDE : Enums.CastleSide.QUEENSIDE);
@@ -165,6 +164,69 @@ public class Move {
 
     protected void _calculateIsEnPassant() {
         _isEnPassant = (_pieceType == Enums.PieceType.PAWN && _board.hasEnPassantTarget() && _board.getEnPassantTarget().equals(_target));
+    }
+
+    protected void _calculateSourceAndTargetFromPosition() {
+
+    }
+
+    protected void _calculateOtherInfoFromPosition() {
+        // This is the only place in this class where the board
+        // is modified, if only temporarily.
+        CheckCheckmateStalemate result = _board.testMoveForCheckCheckmateStalemate(this);
+        _isMate = result.checkmate;
+        _isCheck = result.check;
+        _isStalemate = result.stalemate;
+    }
+
+    protected void _calculateSourceAndTargetFromUci() {
+        _source = Position.uciToInternal(_uciFormat.substring(0, 2));
+        _target = Position.uciToInternal(_uciFormat.substring(2, 4));
+    }
+
+    protected void _calculateOtherInfoFromUci() {
+        if (_uciFormat.length() == 5) {
+            _isPromotion = true;
+            if (_uciFormat.charAt(4) == 'q') {
+                _promotionResult = Enums.PieceType.QUEEN;
+            }
+            else if (_uciFormat.charAt(4) == 'b') {
+                _promotionResult = Enums.PieceType.BISHOP;
+            }
+            else if (_uciFormat.charAt(4) == 'n' || _uciFormat.charAt(4) == 'k') {
+                _promotionResult = Enums.PieceType.KNIGHT;
+            }
+            else if (_uciFormat.charAt(4) == 'r') {
+                _promotionResult = Enums.PieceType.ROOK;
+            }
+        }
+        else {
+            _isPromotion = false;
+            _promotionResult = Enums.PieceType.BLANK;
+        }
+
+        // This is the only place in this class where the board
+        // is modified, if only temporarily.
+        CheckCheckmateStalemate result = _board.testMoveForCheckCheckmateStalemate(this);
+        _isMate = result.checkmate;
+        _isCheck = result.check;
+        _isStalemate = result.stalemate;
+    }
+
+    protected void _calculateSourceAndTargetFromAlgebraic() {
+        NotationConverter converter = new NotationConverter(_board);
+        converter.handleAlgebraicNotation(_algebraicFormat);
+        _source = new Position(converter.sourcecol(), converter.sourcerow());
+        _target = new Position(converter.targetcol(), converter.targetrow());
+    }
+
+    protected void _calculateOtherInfoFromAlgebraic() {
+        NotationConverter converter = new NotationConverter(_board);
+        converter.handleAlgebraicNotation(_algebraicFormat);
+        _isPromotion = converter.isPromotion();
+        _promotionResult = converter.promotionResult();
+        _isCheck = converter.isCheck();
+        _isMate = converter.isMate();
     }
 
     protected void _calculateUciFormat() {
@@ -186,192 +248,6 @@ public class Move {
             else if (_promotionResult == Enums.PieceType.KNIGHT) {
                 _uciFormat += 'n';
             }
-        }
-        else {
-            _promotionResult = Enums.PieceType.BLANK;
-        }
-    }
-
-    protected void _calculateInternalValuesWithUci() {
-        _source = Position.uciToInternal(_uciFormat.substring(0, 2));
-        _target = Position.uciToInternal(_uciFormat.substring(2, 4));
-        
-        if (_uciFormat.length() == 5) {
-            _isPromotion = true;
-            if (_uciFormat.charAt(4) == 'q') {
-                _promotionResult = Enums.PieceType.QUEEN;
-            }
-            else if (_uciFormat.charAt(4) == 'b') {
-                _promotionResult = Enums.PieceType.BISHOP;
-            }
-            else if (_uciFormat.charAt(4) == 'n' || _uciFormat.charAt(4) == 'k') {
-                _promotionResult = Enums.PieceType.KNIGHT;
-            }
-            else if (_uciFormat.charAt(4) == 'r') {
-                _promotionResult = Enums.PieceType.ROOK;
-            }
-        }
-        else {
-            _isPromotion = false;
-            _promotionResult = Enums.PieceType.BLANK;
-        }
-    }
-
-    protected void _calculateInternalValuesWithAlgebraic() {
-        _isCheck = false;
-        _isMate = false;
-        _isCastle = false;
-        _castleSide = Enums.CastleSide.KINGSIDE;
-        _isPromotion = false;
-        _promotionResult = PieceType.BLANK;
-
-        NotationConverter converter = new NotationConverter(_board);
-        converter.handleAlgebraicNotation(_algebraicFormat);
-        String text = _algebraicFormat;
-        int charsToIgnore = 0;
-        if (_algebraicFormat.endsWith("+")) {
-            _isCheck = true;
-        }
-        else if (_algebraicFormat.endsWith("#")) {
-            _isMate = true;
-        }
-        if (_algebraicFormat.startsWith("O-O-O")) {
-            _isCastle = true;
-            _castleSide = Enums.CastleSide.QUEENSIDE;
-        }
-        else if (_algebraicFormat.startsWith("O-O")) {
-            _isCastle = true;
-            _castleSide = Enums.CastleSide.KINGSIDE;
-        }
-
-        _color = _board.whosTurnToGo();
-
-        if (_isCastle) {
-            if (_castleSide == Enums.CastleSide.KINGSIDE) {
-                if (_color == Enums.Color.WHITE) {
-                    _source = new Position(4, 0);
-                    _target = new Position(6, 0);
-                }
-                else {
-                    _source = new Position(4, 7);
-                    _target = new Position(6, 7);
-                }
-            }
-            else {
-                if (_color == Enums.Color.WHITE) {
-                    _source = new Position(4, 0);
-                    _target = new Position(2, 0);
-                }
-                else {
-                    _source = new Position(4, 7);
-                    _target = new Position(2, 7);
-                }
-            }
-            return;
-        }
-
-        int numExtraCharsAtEnd = 0;
-        if (_isMate || _isCheck) {
-            ++numExtraCharsAtEnd;
-        }
-        if (_isPromotion) {
-            numExtraCharsAtEnd += 2;
-        }
-
-        char firstChar = _algebraicFormat.charAt(0);
-        char secondChar = _algebraicFormat.charAt(1);
-        if (firstChar >= 'a' && firstChar <= 'h') {
-            // Pawn move
-            if (secondChar == 'x') {
-                // Capture with pawn
-                int capturedRank = Character.getNumericValue(_algebraicFormat.charAt(3));
-                int increment = (_color == Enums.Color.WHITE ? -1 : 1);
-                _source = new Position(firstChar - 'a', capturedRank - 1 + increment);
-                _target = new Position(_algebraicFormat.charAt(2) - 'a', capturedRank - 1);
-            }
-            else {
-                // Pawn push
-                int targetRank = Character.getNumericValue(secondChar);
-                _target = new Position(firstChar - 'a', targetRank - 1);
-                int increment = (_color == Enums.Color.WHITE ? -1 : 1);
-                boolean done = false;
-                boolean found = false;
-                int foundRank = -1;
-                int rankToCheck = targetRank + increment;
-                while (!done) {
-                    if (Math.abs(rankToCheck - targetRank) > 2 || rankToCheck == 0 || rankToCheck == 9) {
-                        break;
-                    }
-                    Position posToCheck = new Position(firstChar - 'a', rankToCheck - 1);
-                    Piece pieceAtPos = _board.pieceAt(posToCheck);
-                    if (pieceAtPos.pieceType() != Enums.PieceType.BLANK) {
-                        if (pieceAtPos.pieceType() != Enums.PieceType.PAWN) {
-                            break;
-                        }
-                        if (pieceAtPos.color() != _color) {
-                            break;
-                        }
-                        found = true;
-                        foundRank = rankToCheck;
-                        break;
-                    }
-                }
-                if (!found) {
-                    throw new RuntimeException("Failed to find original position of pawn push");
-                }
-                if (foundRank - targetRank == 2 && foundRank != 7) {
-                    throw new RuntimeException("Found pawn push 2 squares but original position not on 7th rank");
-                }
-                if (targetRank - foundRank == 2 && foundRank != 2) {
-                    throw new RuntimeException("Found pawn push 2 squares but original position not on 2nd rank");
-                }
-                _source = new Position(firstChar - 'a', foundRank - 1);
-            }
-        }
-        else if (firstChar == 'N') {
-            char thirdChar = _algebraicFormat.charAt(2);
-            if (thirdChar >= 'a' && thirdChar <= 'h') {
-                // Both knights could have made the move
-
-            }
-            if (_algebraicFormat.length() >= 4) {
-                char fourthChar = _algebraicFormat.charAt(3);
-
-            }
-        }
-
-
-
-        int lastCharPosition = _algebraicFormat.length() - 1 - charsToIgnore;
-        char lastChar = _algebraicFormat.charAt(lastCharPosition);
-        char penultimateChar = _algebraicFormat.charAt(lastCharPosition - 1);
-        if (penultimateChar == '=' &&
-            (lastChar == 'B' || lastChar == 'N' || lastChar == 'R' || lastChar == 'Q')) {
-                _isPromotion = true;
-                charsToIgnore += 2;
-        }
-
-        _source = Position.uciToInternal(_uciFormat.substring(0, 2));
-        _target = Position.uciToInternal(_uciFormat.substring(2, 4));
-        
-        if (_uciFormat.length() == 5) {
-            _isPromotion = true;
-            if (_uciFormat.charAt(4) == 'q') {
-                _promotionResult = Enums.PieceType.QUEEN;
-            }
-            else if (_uciFormat.charAt(4) == 'b') {
-                _promotionResult = Enums.PieceType.BISHOP;
-            }
-            else if (_uciFormat.charAt(4) == 'n' || _uciFormat.charAt(4) == 'k') {
-                _promotionResult = Enums.PieceType.KNIGHT;
-            }
-            else if (_uciFormat.charAt(4) == 'r') {
-                _promotionResult = Enums.PieceType.ROOK;
-            }
-        }
-        else {
-            _isPromotion = false;
-            _promotionResult = Enums.PieceType.BLANK;
         }
     }
 
@@ -410,8 +286,6 @@ public class Move {
                 }
             }
             if (sameRank) {
-                //_algebraicFormat += 'a';
-                //_algebraicFormat += _source.col;
                 _algebraicFormat += (char)('a' + _source.col);
             }
             if (sameFile) {
@@ -440,6 +314,12 @@ public class Move {
             else {
                 _algebraicFormat += 'X';
             }
+        }
+        if (_isCheck) {
+            _algebraicFormat += '+';
+        }
+        if (_isMate) {
+            _algebraicFormat += '#';
         }
     }
 
@@ -482,15 +362,11 @@ public class Move {
     protected Enums.PieceType _promotionResult = Enums.PieceType.BLANK;
     protected boolean _isCastle;
     protected Enums.CastleSide _castleSide = Enums.CastleSide.KINGSIDE;
-    public String _uciFormat = new String();
+    protected String _uciFormat = new String();
     protected String _algebraicFormat = new String();
-    protected boolean _ruinedCastling[] = new boolean[2];
     protected boolean _isEnPassant;
-    protected boolean _ruinedEnPassant;
-    protected Position _ruinedEnPassantTarget = new Position();
-    protected boolean _enabledEnPassant;
-    protected Position _enabledEnPassantTarget = new Position();
     protected boolean _isCheck;
     protected boolean _isMate;
+    protected boolean _isStalemate;
     
 }

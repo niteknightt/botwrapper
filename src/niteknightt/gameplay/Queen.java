@@ -20,7 +20,7 @@ public class Queen extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 possibleMoves.add(move);
             }
@@ -35,7 +35,7 @@ public class Queen extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 possibleMoves.add(move);
             }
@@ -50,7 +50,7 @@ public class Queen extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 possibleMoves.add(move);
             }
@@ -65,7 +65,7 @@ public class Queen extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 possibleMoves.add(move);
             }
@@ -81,7 +81,7 @@ public class Queen extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 possibleMoves.add(move);
             }
@@ -98,7 +98,7 @@ public class Queen extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 possibleMoves.add(move);
             }
@@ -115,7 +115,7 @@ public class Queen extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 possibleMoves.add(move);
             }
@@ -132,7 +132,7 @@ public class Queen extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 possibleMoves.add(move);
             }
@@ -152,7 +152,7 @@ public class Queen extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 return true;
             }
@@ -167,7 +167,7 @@ public class Queen extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 return true;
             }
@@ -182,7 +182,7 @@ public class Queen extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 return true;
             }
@@ -197,7 +197,7 @@ public class Queen extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 return true;
             }
@@ -213,7 +213,7 @@ public class Queen extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 return true;
             }
@@ -230,7 +230,7 @@ public class Queen extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 return true;
             }
@@ -247,7 +247,7 @@ public class Queen extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 return true;
             }
@@ -264,7 +264,7 @@ public class Queen extends Piece {
             if (_board.isSquarePieceColor(target, _color)) {
                 break;
             }
-            Move move = new Move(_position, target, _board);
+            Move move = new Move(_position, target, Enums.PieceType.BLANK, _board);
             if (_board.testMoveForLegality(move)) {
                 return true;
             }
